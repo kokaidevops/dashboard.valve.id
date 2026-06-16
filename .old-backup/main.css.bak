@@ -1,0 +1,118 @@
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+/* Import Tailwind v4 Engine */
+@import "tailwindcss";
+
+/* ── KUSTOMISASI TEMA SAAS (PENGGANTI TAILWIND.CONFIG.JS) ── */
+@theme {
+  /* Mengatur Font Plus Jakarta Sans secara global */
+  --font-sans: "Plus Jakarta Sans", sans-serif;
+  
+  /* Menambahkan Palet Warna Turquoise untuk identitas brand */
+  --color-brand-50: #f0fdfa;
+  --color-brand-100: #ccfbf1;
+  --color-brand-400: #2dd4bf;
+  --color-brand-500: #14b8a6;
+  --color-brand-600: #0d9488;
+  --color-brand-700: #0f766e;
+
+  --bg-primary: #f6f8fc;
+  --bg-card: #ffffff;
+  --border-color: #e5e7eb;
+
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+
+  --sidebar-width: 280px;
+  --sidebar-collapse-width: 96px;
+
+  --radius-card: 28px;
+}
+
+/* Baris ini memaksa Tailwind v4 mendeteksi class="dark" di elemen teratas (html) */
+@variant dark (&:where(.dark, .dark *));
+
+/* Base Styles */
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    @apply antialiased bg-slate-50 text-slate-800 transition-colors duration-200;
+  }
+  
+  /* Deteksi Dark Mode otomatis berbasis class .dark pada HTML */
+  .dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+}
+
+/* ── MODERN SAAS UI OVERRIDES UNTUK PRIMEVUE DATATABLE ── */
+@layer components {
+  .p-datatable {
+    @apply border border-slate-100 dark:border-slate-800/50 rounded-xl overflow-hidden shadow-xs;
+  }
+  
+  .p-datatable .p-datatable-thead > tr > th {
+    @apply bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-semibold py-3 px-4 text-xs uppercase tracking-wider border-b border-slate-100 dark:border-slate-800/50;
+  }
+  
+  .p-datatable .p-datatable-tbody > tr {
+    @apply bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800/50 transition-colors;
+  }
+  
+  .p-datatable .p-datatable-tbody > tr:hover {
+    @apply bg-slate-50/60 dark:bg-slate-800/20;
+  }
+  
+  .p-paginator {
+    @apply bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/50 py-2.5;
+  }
+
+  /* Container Utama Tabel */
+  .p-datatable {
+    @apply border border-slate-100 dark:border-slate-800/80 rounded-xl overflow-hidden shadow-xs bg-white dark:bg-slate-900 transition-colors duration-300 w-full text-left;
+  }
+  
+  /* Bagian Kepala Tabel (Header) */
+  .p-datatable .p-datatable-thead > tr > th {
+    @apply bg-slate-50/70 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 font-bold py-3.5 px-4 text-[10px] uppercase tracking-wider border-b border-slate-100 dark:border-slate-800/60 transition-colors duration-300 relative;
+  }
+
+  /* Merapikan Ikon Sortir agar tidak menempel pada teks */
+  .p-datatable .p-sortable-column .p-sortable-column-icon {
+    @apply text-[9px] ml-2 text-slate-400 dark:text-slate-600 transition-colors duration-200 inline-block align-middle;
+  }
+  
+  /* Bagian Isi Data (Row & Cell) */
+  .p-datatable .p-datatable-tbody > tr {
+    @apply bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-b border-slate-100/70 dark:border-slate-800/40 transition-colors duration-300;
+  }
+
+  .p-datatable .p-datatable-tbody > tr > td {
+    @apply py-3 px-4 text-xs font-medium leading-relaxed;
+  }
+  
+  /* Efek Hover Baris Tradisional SaaS */
+  .p-datatable .p-datatable-tbody > tr:hover {
+    @apply bg-slate-50/50 dark:bg-slate-800/20 text-slate-900 dark:text-slate-100;
+  }
+  
+  /* ── PERBAIKAN TOTAL PAGINATOR BAWAH ── */
+  .p-paginator {
+    @apply bg-slate-50/40 dark:bg-slate-900/40 border-t border-slate-100 dark:border-slate-800/60 py-2 px-4 flex items-center justify-end gap-1 text-xs select-none transition-colors duration-300;
+  }
+
+  /* Tombol-tombol angka navigasi di paginator */
+  .p-paginator .p-paginator-pages .p-paginator-page,
+  .p-paginator .p-paginator-first,
+  .p-paginator .p-paginator-prev,
+  .p-paginator .p-paginator-next,
+  .p-paginator .p-paginator-last {
+    @apply min-w-8 h-8 rounded-lg text-slate-500 dark:text-slate-400 flex items-center justify-center transition-all text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200 p-0 m-0 cursor-pointer;
+  }
+
+  /* State Tombol Halaman Aktif */
+  .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+    @apply bg-brand-500/10 text-brand-600 dark:text-brand-400 font-bold border border-brand-500/20;
+  }
+}

@@ -1,0 +1,47 @@
+<template>
+  <div class="flex min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 font-sans">
+    
+    <Sidebar v-if="!route.meta.hideSidebar" />
+
+    <div :class="[!route.meta.hideSidebar ? 'grow lg:pl-64 flex flex-col' : 'w-full']">
+      <Header v-if="!route.meta.hideSidebar" />
+      
+      <main class="grow p-6">
+        <router-view />
+      </main>
+    </div>
+
+  </div>
+</template>
+
+<script setup>
+import { onMounted, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { useAuthStore } from './store/auth';
+import Sidebar from './components/layout/Sidebar.vue';
+import Header from './components/layout/Header.vue';
+
+const route = useRoute();
+const authStore = useAuthStore();
+
+// Fungsi penyegar aktivitas jika pengguna berinteraksi dengan aplikasi
+const updateActivity = () => {
+  if (authStore.token) {
+    authStore.refreshActivity();
+  }
+};
+
+onMounted(() => {
+  // Pasang event listener global untuk mendeteksi keaktifan user
+  window.addEventListener('click', updateActivity);
+  window.addEventListener('keydown', updateActivity);
+  window.addEventListener('mousemove', updateActivity);
+});
+
+onUnmounted(() => {
+  // Bersihkan listener saat aplikasi dihancurkan
+  window.removeEventListener('click', updateActivity);
+  window.removeEventListener('keydown', updateActivity);
+  window.removeEventListener('mousemove', updateActivity);
+});
+</script>

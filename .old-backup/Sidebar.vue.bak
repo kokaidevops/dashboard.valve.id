@@ -1,0 +1,92 @@
+<template>
+  <div 
+    v-if="store.isSidebarOpen" 
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 lg:hidden transition-opacity duration-300"
+    @click="store.toggleSidebar()"
+  ></div>
+  
+  <aside class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-950 border-r border-slate-100 dark:border-slate-900 text-slate-500 dark:text-slate-400 flex flex-col z-30 transition-all duration-300">
+    
+    <div class="flex items-center px-6 lg:px-8 py-5 border-b border-slate-100 dark:border-slate-900 gap-3">
+      <div class="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md shadow-brand-500/20 shrink-0">
+        K
+      </div>
+      <div class="flex flex-col">
+        <span class="text-2xl font-bold text-slate-900 dark:text-white tracking-wide uppercase leading-none">Kokai</span>
+        <span class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 tracking-wider">Dashboard Engine</span>
+      </div>
+    </div>
+
+    <nav class="grow p-4 space-y-1.5 overflow-y-auto">
+      <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600 px-3 mb-2">
+        Analitis Menu
+      </div>
+      
+      <div v-if="store.pagesList.length === 0" class="px-3 py-4 text-xs text-slate-400 dark:text-slate-600 italic">
+        Tidak ada dashboard tersedia
+      </div>
+
+      <router-link 
+        v-for="page in store.pagesList" 
+        :key="page.id"
+        :to="'/page/' + page.slug"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all group text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:text-slate-900 dark:hover:text-slate-200"
+        active-class="bg-brand-500/5 dark:bg-brand-600/10 text-brand-600 dark:text-brand-400 font-semibold border-l-2 border-brand-500 rounded-l-none!"
+      >
+        <i class="pi pi-chart-bar text-xs text-slate-400 group-hover:text-brand-500 transition-colors"></i>
+        
+        <span class="truncate">{{ page.name }}</span>
+
+        <span 
+          v-if="page.access_type === 'private'" 
+          class="ml-auto text-[10px] bg-slate-100 dark:bg-slate-900 group-hover:bg-slate-200 dark:group-hover:bg-slate-800 text-slate-400 dark:text-slate-500 px-1.5 py-0.5 rounded-md flex items-center gap-1 transition-colors"
+          title="Halaman Terproteksi Privat"
+        >
+          <i class="pi pi-lock text-[8px]"></i> Privat
+        </span>
+      </router-link>
+    </nav>
+
+    <div class="p-4 border-t border-slate-100 dark:border-slate-900 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/40">
+      <button 
+        @click="store.toggleTheme" 
+        class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200/40 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer"
+        :title="store.isDarkMode ? 'Ubah ke Mode Terang' : 'Ubah ke Mode Gelap'"
+      >
+        <i :class="store.isDarkMode ? 'pi pi-sun' : 'pi pi-moon'" class="text-xs"></i>
+      </button>
+
+      <button 
+        v-if="authStore.isAuthenticated"
+        @click="handleLogout" 
+        class="flex items-center gap-1.5 text-[11px] font-semibold text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 px-3 py-2 rounded-xl hover:bg-rose-500/5 dark:hover:bg-rose-500/10 transition-all cursor-pointer"
+      >
+        <i class="pi pi-sign-out text-[10px]"></i> Keluar
+      </button>
+    </div>
+  </aside>
+</template>
+
+<script setup>
+import { onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { useDashboardStore } from '../../store/dashboard';
+import { useAuthStore } from '../../store/auth';
+
+const store = useDashboardStore();
+const authStore = useAuthStore();
+const router = useRouter();
+
+onMounted(() => {
+  store.fetchSidebarPages();
+});
+
+watch(() => authStore.isAuthenticated, () => {
+  store.fetchSidebarPages();
+});
+
+const handleLogout = () => {
+  authStore.logout();
+  router.push('/login');
+};
+</script>

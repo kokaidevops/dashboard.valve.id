@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #f6f8fc;
+  --bg-card: #ffffff;
+  --border-color: #e5e7eb;
+
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+
+  --sidebar-width: 280px;
+  --sidebar-collapse-width: 96px;
+
+  --radius-card: 20px;
+}
+
+html,
+body,
+#app {
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+body {
+  font-family: Inter, system-ui, sans-serif;
+
+  color: var(--text-primary);
+}
+
+/* reusable card */
+
+.dashboard-card {
+  @apply bg-white border border-slate-200 shadow-sm;
+  border-radius: var(--radius-card);
+}
+
+.page-title {
+  @apply text-3xl font-bold tracking-tight;
+}
+
+.page-subtitle {
+  @apply text-slate-500 text-sm;
+}
+
+.soft-hover {
+  @apply transition-all duration-300;
+}
+
+.soft-hover:hover {
+  transform: translateY(-2px);
+}
+
+/* scroll */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d6d9df;
+  border-radius: 999px;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}

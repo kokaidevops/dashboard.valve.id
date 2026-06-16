@@ -1,0 +1,61 @@
+<template>
+  <KpiCard 
+    v-if="!loading"
+    :title="item.name" 
+    :value="kpiValue" 
+    :percentage="kpiPercentage" 
+    :icon="determineIcon(item.name)" 
+    :isCurrency="checkIfCurrency(item.name)" 
+  />
+  
+  <div v-else class="h-35 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 rounded-2xl p-5 flex flex-col justify-between animate-pulse">
+    <div class="h-3 w-1/3 bg-slate-100 dark:bg-slate-800 rounded-md"></div>
+    <div class="h-6 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-md my-2"></div>
+    <div class="h-3 w-1/4 bg-slate-100 dark:bg-slate-800 rounded-md"></div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useDashboardStore } from '@/stores/dashboardStore';
+import KpiCard from '@/components/KpiCard.vue';
+
+const props = defineProps({
+  item: { type: Object, required: true }
+});
+
+const store = useDashboardStore();
+const loading = ref(true);
+const kpiValue = ref(0);
+const kpiPercentage = ref(0);
+
+// Helper Otomatis: Memilih ikon berdasarkan kata kunci pada nama widget di Odoo
+function determineIcon(name) {
+  const lower = name.toLowerCase();
+  if (lower.includes('revenue') || lower.includes('sales') || lower.includes('omset')) return 'pi-wallet';
+  if (lower.includes('lead') || lower.includes('client') || lower.includes('customer')) return 'pi-users';
+  if (lower.includes('proyek') || lower.includes('produksi') || lower.includes('katup')) return 'pi-box';
+  return 'pi-chart-line'; // Default ikon jika tidak lolos seleksi kata kunci
+}
+
+// Helper Otomatis: Deteksi apakah tipe data bernilai mata uang Rupiah
+function checkIfCurrency(name) {
+  const lower = name.toLowerCase();
+  return lower.includes('revenue') || lower.includes('sales') || lower.includes('omset') || lower.includes('nilai');
+}
+
+onMounted(() => {
+  // Tembak permintaan data ke Node.js bridge menggunakan ID item komponen Odoo
+  store.socket.emit('get_chart_data', { itemId: props.item.id }, (res) => {
+    loading.value = false;
+    if (res.success && res.data && res.data.length > 0) {
+      const rowData = res.data[0]; // Kpi kueri selalu mengembalikan 1 baris objek teratas
+      
+      // Ambil secara dinamis nilai dari key pertama dan kedua hasil kueri SQL Odoo
+      const keys = Object.keys(rowData);
+      kpiValue.value = rowData[keys[0]] || 0;
+      kpiPercentage.value = rowData[keys[1]] || 0;
+    }
+  });
+});
+</script>

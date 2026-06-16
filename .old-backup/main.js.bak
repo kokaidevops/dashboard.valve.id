@@ -1,0 +1,36 @@
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import PrimeVue from 'primevue/config';
+import VueApexCharts from "vue3-apexcharts";
+
+import App from './App.vue';
+import router from './router';
+
+// ── IMPORT STRUKTUR UTAMA CSS PRIMEVUE ──
+import Aura from '@primevue/themes/aura'; // Kita gunakan tema Aura/Lara v4 yang modern
+import 'primeicons/primeicons.css';                          // Driver Ikon
+
+// Impor CSS utama
+import './assets/main.css';
+
+const app = createApp(App);
+const pinia = createPinia();
+
+app.use(pinia);
+app.use(router);
+app.use(PrimeVue, { 
+    theme: {
+        preset: Aura,
+        options: {
+            darkModeSelector: '.dark', // FIX: Memaksa PrimeVue v4 mengikuti class="dark" yang kita buat di HTML!
+            cssLayer: {
+                name: 'primevue',
+                order: 'primevue, tailwind' // Menjaga agar class Tailwind v4 kita bisa menimpa gaya dasar PrimeVue
+            }
+        }
+    },
+    ripple: true 
+});
+app.use(VueApexCharts);
+
+app.mount('#app');
