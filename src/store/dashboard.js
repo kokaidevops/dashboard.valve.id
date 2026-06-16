@@ -4,7 +4,10 @@ import { io } from 'socket.io-client';
 import { useAuthStore } from './auth';
 
 export const useDashboardStore = defineStore('dashboard', () => {
-  const socket = io('http://127.0.0.1:31213');
+  // const socket = io('http://localhost:3000');
+  const socket = io({
+    transports: ['websocket', 'polling'] // Mengutamakan WebSocket murni
+  });
   const authStore = useAuthStore();
   
   // State Navigasi & Komponen Layout
