@@ -5,9 +5,7 @@ import { useAuthStore } from './auth';
 
 export const useDashboardStore = defineStore('dashboard', () => {
   // const socket = io('http://localhost:3000');
-  const socket = io({
-    transports: ['websocket', 'polling'] // Mengutamakan WebSocket murni
-  });
+  const socket = io({ transports: ['websocket', 'polling'] });
   const authStore = useAuthStore();
   
   // State Navigasi & Komponen Layout

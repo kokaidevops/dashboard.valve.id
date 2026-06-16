@@ -9,7 +9,7 @@
     @card-click="handleDynamicCardClick"
   />
 
-  <Sidebar v-model:visible="drawerVisible" position="right" class="w-full bg-slate-200 md:w-280 border-l border-slate-100">
+  <Sidebar v-model:visible="drawerVisible" position="right" class="w-full max-w-3xl md:max-w-4xl lg:max-w-5xl bg-slate-200 md:w-280 border-l border-slate-100">
       <template #header>
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 rounded-xl bg-slate-500/10 text-slate-500 flex items-center justify-center">
@@ -61,7 +61,15 @@ const drawerData = ref([]);
 
 const cleanHeaderLabel = (text) => text.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
-const drawerColumns = computed(() => drawerData.value.length > 0 ? Object.keys(drawerData.value[0]) : []);
+const drawerColumns = computed(() => {
+  if (drawerData.value.length === 0) return [];
+  
+  return Object.keys(drawerData.value[0]).filter(col => {
+    const lowerCol = col.toLowerCase();
+    // Mengecualikan kolom bernama murni 'id' atau yang berakhiran '_id' (e.g., partner_id, user_id)
+    return lowerCol !== 'id' && !lowerCol.endsWith('_id');
+  });
+});
 
 const store = useDashboardStore();
 const loading = ref(true);
