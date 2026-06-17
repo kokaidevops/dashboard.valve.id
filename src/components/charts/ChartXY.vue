@@ -41,7 +41,11 @@ const props = defineProps({
   data: {
     type: Array,
     default: () => []
-  }
+  },
+  direction: {
+    type: String,
+    default: 'vertical'
+  },
 });
 
 const store = useDashboardStore();
