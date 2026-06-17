@@ -33,7 +33,7 @@
       
       <div v-if="currentView === 'chart'" class="w-full cursor-pointer">
         <ChartPie v-if="['pie', 'donut', 'polarArea', 'radialBar'].includes(item.chart_type)" :type="item.chart_type" :data="rawData" @chart-click="handleDynamicChartClick" />
-        <ChartXY v-else :type="item.chart_type" :horizontal="item.direction" :data="rawData" @chart-click="handleDynamicChartClick" />
+        <ChartXY v-else :type="item.chart_type" :direction="item.direction" :data="rawData" @chart-click="handleDynamicChartClick" />
       </div>
 
       <div v-else class="w-full overflow-hidden flex flex-col justify-between">
