@@ -19,6 +19,8 @@
 import { computed } from 'vue';
 import { useDashboardStore } from '../../store/dashboard';
 
+const emit = defineEmits(['chart-click']);
+
 const props = defineProps({
   type: {
     type: String,
@@ -58,9 +60,11 @@ const chartOptions = computed(() => {
           // Ambil nama kolom kategori (Sumbu X)
           const categoryKey = columns.value[0];
           // Dapatkan nilai teks berdasarkan indeks batang yang diklik pengguna
-          const selectedValue = props.data[config.dataPointIndex]?.[categoryKey];
+          const activeRow = props.data[config.dataPointIndex];
           
-          if (selectedValue) {
+          if (activeRow) {
+            const selectedValue = activeRow[categoryKey];
+            console.log(`[Graph Click Debug] Terdeteksi klik pada: ${categoryKey} = ${selectedValue}`);
             // Emit data keluar menuju DashboardItem.vue
             emit('chart-click', { key: categoryKey, value: selectedValue });
           }
