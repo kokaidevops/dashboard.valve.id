@@ -52,7 +52,7 @@
       </div>
     </div>
 
-    <Sidebar v-model:visible="drawerVisible" position="right" class="w-full max-w-3xl md:max-w-4xl lg:max-w-5xl bg-slate-200 md:w-280 border-l border-slate-100">
+    <Drawer v-model:visible="drawerVisible" position="right" class="w-full md:w-140! lg:w-180! bg-slate-200 border-l border-slate-100">
       <template #header>
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 rounded-xl bg-slate-500/10 text-slate-500 flex items-center justify-center">
@@ -84,7 +84,7 @@
           </Column>
         </DataTable>
       </div>
-    </Sidebar>
+    </Drawer>
   </div>
 </template>
 
@@ -93,7 +93,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useDashboardStore } from '../store/dashboard';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Sidebar from 'primevue/sidebar';
+import Drawer from 'primevue/drawer';
 import ChartXY from './charts/ChartXY.vue';
 import ChartPie from './charts/ChartPie.vue';
 
