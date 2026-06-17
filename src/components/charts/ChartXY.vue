@@ -87,7 +87,7 @@ const chartOptions = computed(() => {
     },
     plotOptions: {
       bar: {
-        horizontal: false,
+        horizontal: props.direction === 'horizontal',
         columnWidth: '45%',
         borderRadius: 4, // Efek tumpul modern pada diagram batang
       }
