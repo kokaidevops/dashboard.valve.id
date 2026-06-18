@@ -16,9 +16,20 @@
         </h2>
         <p class="page-subtitle">Welcome back.</p>
       </div>
+
     </div>
-  
+    
     <div class="flex items-center gap-4">
+      <div class="w-56 flex items-center gap-2 rounded-xl text-[11px]">
+        <Dropdown 
+          v-model="localFilters.filter" 
+          :options="filters" 
+          optionLabel="name" 
+          placeholder="Filter..." 
+          class="w-full md:w-14rem" 
+          @change="applyFilters"
+        />
+      </div>
       <router-link 
         v-if="!authStore.isAuthenticated" 
         to="/login"
@@ -29,10 +40,10 @@
 
       <div v-else class="flex items-center gap-2.5">
         <div class="text-right hidden sm:block">
-          <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">{{ authStore.user?.name }}</p>
+          <p class="text-xs font-semibold text-slate-700">{{ authStore.user?.name }}</p>
           <p class="text-[10px] text-slate-400">Odoo User ID: {{ authStore.user?.id }}</p>
         </div>
-        <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300">
+        <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600">
           <i class="pi pi-user text-xs"></i>
         </div>
       </div>
@@ -41,9 +52,24 @@
 </template>
 
 <script setup>
+import { reactive } from 'vue';
 import { useAuthStore } from '../../store/auth';
 import { useDashboardStore } from '../../store/dashboard';
+import Dropdown from 'primevue/dropdown';
+
 
 const authStore = useAuthStore();
 const dashboardStore = useDashboardStore();
+
+const filters = dashboardStore.filters;
+
+const localFilters = reactive({
+  filter: { name: 'This Month', code: 'monthly' }
+})
+
+function applyFilters() {
+  console.log("Apply Filter");
+  console.log(localFilters);
+  dashboardStore.setFilter(localFilters.filter);
+}
 </script>

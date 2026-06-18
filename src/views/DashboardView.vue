@@ -93,13 +93,11 @@ import { useRoute } from 'vue-router';
 import { useDashboardStore } from '../store/dashboard';
 import DashboardItem from '../components/DashboardItem.vue';
 import Layout from '../components/layout/Layout.vue';
-import KpiCard from '../components/KpiCard.vue';
 import DashboardKpiWrapper from '../components/DashboardKpiWrapper.vue';
 
 const route = useRoute();
 const store = useDashboardStore();
 
-// Fungsi terisolasi untuk memicu request tata letak ke Node.js Bridge via Socket
 const loadDashboardContent = () => {
   const slug = route.params.slug;
   if (slug) {
@@ -107,7 +105,6 @@ const loadDashboardContent = () => {
   }
 };
 
-// Eksekusi ketika komponen pertama kali dipasang di DOM
 onMounted(() => {
   loadDashboardContent();
 });

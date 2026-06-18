@@ -47,7 +47,6 @@ const chartSeries = computed(() => {
 // 2. GENERATE OPTIONS & LABELS ADAPTIF
 const chartOptions = computed(() => {
   const labelKey = columns.value[0]; // Ambil kolom pertama sebagai teks label (e.g., status, kategori)
-  const isDark = store.isDarkMode;
   const labelsArray = props.data.map(row => String(row[labelKey] || 'N/A').toUpperCase());
 
   return {
@@ -77,7 +76,7 @@ const chartOptions = computed(() => {
     stroke: {
       show: true,
       // Berikan pemisah tipis antar potongan chart sesuai tema latar belakang
-      colors: [isDark ? '#0f172a' : '#ffffff'],
+      colors: ['#ffffff'],
       width: 2
     },
     // Konfigurasi internal Donut/Pie Hole
@@ -90,13 +89,13 @@ const chartOptions = computed(() => {
             name: {
               show: true,
               fontSize: '11px',
-              color: isDark ? '#64748b' : '#94a3b8'
+              color: '#94a3b8'
             },
             value: {
               show: true,
               fontSize: '16px',
               fontWeight: '700',
-              color: isDark ? '#f8fafc' : '#0f172a',
+              color: '#0f172a',
               formatter: (val) => Number(val).toLocaleString('id-ID')
             },
             total: {
@@ -104,7 +103,7 @@ const chartOptions = computed(() => {
               label: 'TOTAL',
               fontSize: '10px',
               fontWeight: '700',
-              color: isDark ? '#475569' : '#94a3b8',
+              color: '#94a3b8',
               formatter: (w) => {
                 const totalSum = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
                 return totalSum.toLocaleString('id-ID');
@@ -123,11 +122,11 @@ const chartOptions = computed(() => {
       position: 'bottom',
       horizontalAlign: 'center',
       fontSize: '11px',
-      labels: { colors: isDark ? '#94a3b8' : '#64748b' },
+      labels: { colors: '#64748b' },
       markers: { radius: 6 }
     },
     tooltip: {
-      theme: isDark ? 'dark' : 'light',
+      theme: 'light',
       style: { fontSize: '11px' }
     }
   };

@@ -4,8 +4,8 @@ import { io } from 'socket.io-client';
 import { useAuthStore } from './auth';
 
 export const useDashboardStore = defineStore('dashboard', () => {
-  // const socket = io('http://192.168.1.11:31213');
-  const socket = io({ transports: ['websocket', 'polling'] });
+  const socket = io('http://localhost:3000');
+  // const socket = io({ transports: ['websocket', 'polling'] });
   const authStore = useAuthStore();
   
   // State Navigasi & Komponen Layout
@@ -15,17 +15,30 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const isLoading = ref(false);
   const errorMessage = ref('');
   const isSidebarOpen = ref(false);
+  const filters = ref([
+    { name: 'Today', code: 'today' },
+    { name: 'This Week', code: 'weekly' },
+    { name: 'This Month', code: 'monthly' },
+    { name: 'This Year', code: 'yearly' },
+    { name: 'Month to Day', code: 'mtd' },
+    { name: 'Year to Day', code: 'yd' },
+    { name: 'Last Month', code: 'lm' },
+    { name: 'Last Year', code: 'ly' },
+  ]);
+  const currentFilter = ref({ name: 'This Month', code: 'monthly' });
 
-  // ── FIX: REAKTIVITAS DARK MODE GLOBAL ──
-  // Mengambil preferensi tema tersimpan atau default ke mode terang (false)
+  function setFilter(newValue) {
+    currentFilter.value = newValue;
+    console.log(`Filter global berubah: ${newValue.code}, menyegarkan data engine...`);
+  }
+
+  watch(currentFilter, () => {
+
+  });
+
   const isDarkMode = ref(localStorage.getItem('theme') === 'dark');
 
-  // Watcher ini bertugas menyuntikkan class .dark ke root <html> secara instan
   watch(isDarkMode, (valueAwal) => {
-    // if (valueAwal) {
-    //   document.documentElement.classList.add('dark');
-    //   localStorage.setItem('theme', 'dark');
-    // } else {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     // }
@@ -64,6 +77,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   function setupRealtimeListeners() {
     dashboardItems.value.forEach(item => {
+      console.log(item);
       socket.off(`chart_refresh:${item.id}`);
       socket.on(`chart_refresh:${item.id}`, (pushData) => {
         const idx = dashboardItems.value.findIndex(i => i.id === item.id);
@@ -76,6 +90,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   return {
     socket, pagesList, currentPageName, dashboardItems, isLoading, errorMessage,
-    isSidebarOpen, isDarkMode, toggleTheme, fetchSidebarPages, fetchDashboardLayout
+    isSidebarOpen, filters, currentFilter, setFilter, toggleTheme, fetchSidebarPages, fetchDashboardLayout
   };
 });

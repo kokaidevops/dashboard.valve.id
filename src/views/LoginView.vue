@@ -8,7 +8,7 @@
           <h2 class="text-3xl font-bold tracking-tight">
             Kokai Analytics
           </h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400">
+          <p class="text-xs text-slate-500">
             Masuk dengan kredensial sistem ERP Odoo Anda
           </p>
         </div>

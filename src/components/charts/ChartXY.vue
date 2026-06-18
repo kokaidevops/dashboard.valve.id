@@ -56,7 +56,6 @@ const columns = computed(() => props.data.length > 0 ? Object.keys(props.data[0]
 // 2. GENERATE OPTIONS (KONFIGURASI GRAFIK) ADAPTIF SINKRON TEMA
 const chartOptions = computed(() => {
   const xKey = columns.value[0] || 'category';
-  const isDark = store.isDarkMode;
 
   return {
     chart: {
@@ -101,30 +100,29 @@ const chartOptions = computed(() => {
       show: true,
       position: 'top',
       horizontalAlign: 'right',
-      labels: { colors: isDark ? '#94a3b8' : '#64748b' }
+      labels: { colors: '#64748b' }
     },
-    // Konfigurasi Grid & Sumbu Adaptif Terhadap Dark/Light Mode
     grid: {
-      borderColor: isDark ? '#1e293b' : '#f1f5f9',
+      borderColor: '#f1f5f9',
       strokeDashArray: 4,
     },
     xaxis: {
       categories: props.data.map(row => row[xKey]),
       labels: {
-        style: { colors: isDark ? '#64748b' : '#94a3b8', fontSize: '11px' }
+        style: { colors: '#94a3b8', fontSize: '11px' }
       },
       axisBorder: { show: false },
       axisTicks: { show: false }
     },
     yaxis: {
       labels: {
-        style: { colors: isDark ? '#64748b' : '#94a3b8', fontSize: '11px' }
+        style: { colors: '#94a3b8', fontSize: '11px' }
       }
     },
     xaxis: {
       categories: props.data.map(row => row[xKey]),
       labels: {
-        style: { colors: isDark ? '#64748b' : '#94a3b8', fontSize: '11px' }
+        style: { colors: '#94a3b8', fontSize: '11px' }
       },
       axisBorder: { show: false },
       axisTicks: { show: false },
@@ -134,14 +132,14 @@ const chartOptions = computed(() => {
         width: props.type === 'line' ? 2 : 'auto', // Garis tipis pemandu khusus tipe line
         position: 'back',
         stroke: {
-          color: isDark ? '#334155' : '#e2e8f0',
+          color: '#e2e8f0',
           width: 1,
           dashArray: 3,
         },
       }
     },
     tooltip: {
-      theme: isDark ? 'dark' : 'light',
+      theme: 'light',
       x: { show: true },
       style: { fontSize: '12px' },
       shared: true,
