@@ -68,8 +68,6 @@ const localFilters = reactive({
 })
 
 function applyFilters() {
-  console.log("Apply Filter");
-  console.log(localFilters);
   dashboardStore.setFilter(localFilters.filter);
 }
 </script>

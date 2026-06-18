@@ -143,7 +143,7 @@ watch(() => props.item.realtimeData, (newData) => {
 
 // Pemuatan Data Pertama Kali (Initial Pull) Saat Kartu Terpasang
 onMounted(() => {
-  store.socket.emit('get_chart_data', { itemId: props.item.id }, (res) => {
+  store.socket.emit('get_chart_data', { itemId: props.item.id, filters: store.applyFilter }, (res) => {
     if (res.success) {
       rawData.value = res.data;
     }

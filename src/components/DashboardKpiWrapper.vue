@@ -91,9 +91,8 @@ function handleDynamicCardClick() {
   });
 }
 
-onMounted(() => {
-  // Tembak permintaan data ke Node.js bridge menggunakan ID item komponen Odoo
-  store.socket.emit('get_chart_data', { itemId: props.item.id }, (res) => {
+function loadDashboard() {
+  store.socket.emit('get_chart_data', { itemId: props.item.id, filters: store.applyFilter }, (res) => {
     loading.value = false;
     if (res.success && res.data && res.data.length > 0) {
       const rowData = res.data[0]; // Kpi kueri selalu mengembalikan 1 baris objek teratas
@@ -104,7 +103,15 @@ onMounted(() => {
       percent.value = parseFloat(rowData[keys[1]]) || 0;
     }
   });
+}
+
+onMounted(() => {
+  loadDashboard();
 });
+
+watch(() => store.applyFilter, () => {
+  loadDashboard();
+}, { deep: true });
 
 // ── UTALITAS FORMATTER DATA SAAS ──
 
