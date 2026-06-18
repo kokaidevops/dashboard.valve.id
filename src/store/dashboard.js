@@ -11,8 +11,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
       return `${year}-${month}-${day}`;
     }
 
-  const socket = io('http://localhost:3000');
-  // const socket = io({ transports: ['websocket', 'polling'] });
+  // const socket = io('http://localhost:3000');
+  const socket = io({ transports: ['websocket', 'polling'] });
   const authStore = useAuthStore();
   
   // State Navigasi & Komponen Layout
