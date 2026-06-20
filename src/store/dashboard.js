@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { io } from 'socket.io-client';
 import { useAuthStore } from './auth';
 
@@ -27,7 +27,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
     { name: 'This Week', code: 'weekly' },
     { name: 'This Month', code: 'monthly' },
     { name: 'This Year', code: 'yearly' },
-    { name: 'Year to Day', code: 'yd' },
     { name: 'Last Month', code: 'lm' },
     { name: 'Last Year', code: 'ly' },
   ]);
@@ -35,7 +34,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const currentFilter = ref({ name: 'This Month', code: 'monthly' });
   const applyFilter = ref({ 
     start: formatDate(new Date(today.getFullYear(), today.getMonth(), 1)), 
-    end: formatDate(new Date(today.getFullYear(), today.getMonth() + 1, 0)),
+    range: '1 month',
+    format: 'YYYY-MM'
   });
 
   function setFilter(newValue) {
@@ -44,7 +44,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const currentDay = today.getDay();
 
     let start = dateToday;
-    let end = dateToday;
+    let range = '1 day'
+    let format = 'YYYY-MM-DD'
     
     if(newValue.code == 'weekly') {
       const distanceToMonday = currentDay === 0 ? 6 : currentDay -1;
@@ -55,42 +56,32 @@ export const useDashboardStore = defineStore('dashboard', () => {
       sunday.setDate(monday.getDate() + 6);
 
       start = formatDate(monday);
-      end = formatDate(sunday);
+      range = '1 week'
+      format = 'WW'
     }
     if(newValue.code == 'monthly') {
       start = formatDate(new Date(today.getFullYear(), today.getMonth(), 1));
-      end = formatDate(new Date(today.getFullYear(), today.getMonth() + 1, 0));
+      range = '1 month'
+      format = 'YYYY-MM'
     }
     if(newValue.code == 'yearly') {
       start = formatDate(new Date(today.getFullYear(), 0, 1));
-      end = formatDate(new Date(today.getFullYear(), 11, 31));
-    }
-    if(newValue.code == 'yd') {
-      start = formatDate(new Date(today.getFullYear(), 0, 1));
+      range = '1 year'
+      format = 'YYYY'
     }
     if(newValue.code == 'lm') {
       start = formatDate(new Date(today.getFullYear(), today.getMonth() - 1, 1));
-      end = formatDate(new Date(today.getFullYear(), today.getMonth(), 0));
+      range = '1 month'
+      format = 'YYYY-MM'
     }
     if(newValue.code == 'ly') {
       start = formatDate(new Date(today.getFullYear() - 1, 0, 1));
-      end = formatDate(new Date(today.getFullYear() - 1, 11, 31));
+      range = '1 year'
+      format = 'YYYY'
     }
 
-    applyFilter.value = {start: start, end: end};
-    console.log(`Filter global berubah: ${newValue.code} [Start: ${start}, End: ${end}], menyegarkan data engine...`);
-  }
-
-  const isDarkMode = ref(localStorage.getItem('theme') === 'dark');
-
-  watch(isDarkMode, (valueAwal) => {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    // }
-  }, { immediate: true }); // immediate: true memastikan tema langsung diterapkan saat aplikasi pertama dimuat
-
-  function toggleTheme() {
-    isDarkMode.value = !isDarkMode.value;
+    applyFilter.value = {start: start, range: range, format: format};
+    console.log(`Filter global berubah: ${newValue.code} - [start: ${start}, range: ${range}, format: ${format}], menyegarkan data engine...`);
   }
 
   // ── FUNGSI NAVIGASI & LAYOUT ──
@@ -134,6 +125,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   return {
     socket, pagesList, currentPageName, dashboardItems, isLoading, errorMessage,
-    isSidebarOpen, filters, currentFilter, applyFilter, setFilter, toggleTheme, fetchSidebarPages, fetchDashboardLayout
+    isSidebarOpen, filters, currentFilter, applyFilter, setFilter, fetchSidebarPages, fetchDashboardLayout
   };
 });
