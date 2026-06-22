@@ -55,7 +55,7 @@ const chartOptions = computed(() => {
       events: {
         dataPointSelection: (event, chartContext, config) => {
           // Ambil nama kolom kategori (Sumbu X)
-          const categoryKey = columns.value[0];
+          const categoryKey = DataFormatter.cleanHeaderLabel(columns.value[0]);
           // Dapatkan nilai teks berdasarkan indeks batang yang diklik pengguna
           const activeRow = props.data[config.dataPointIndex];
           

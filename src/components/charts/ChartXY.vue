@@ -97,7 +97,7 @@ const chartOptions = computed(() => {
   function triggerDrilldown(dataPointIndex) {
     if (dataPointIndex === -1 || dataPointIndex === undefined) return;
     const selectedCategory = categories[dataPointIndex];
-
+    const xlabelClean = DataFormatter.autoFormat(xlabel);
     if (selectedCategory) {
       console.log(`[Graph Click Debug] Terdeteksi klik pada: ${xlabel} = ${selectedCategory}`);
       emit('chart-click', { key: xlabel, value: selectedCategory });
