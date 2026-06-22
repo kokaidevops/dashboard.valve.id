@@ -159,14 +159,14 @@ const chartOptions = computed(() => {
     },
     yaxis: {
       labels: {
-        formatter: (val) => { return DataFormatter.autoFormat(ylabel, val, false) },
+        formatter: (val) => { return DataFormatter.autoFormat(props.direction === 'horizontal' ? xlabel : ylabel , val, false) },
         style: { colors: '#94a3b8', fontSize: '11px' }
       }
     },
     xaxis: {
       categories: categories,
       labels: {
-        formatter: (val) => { return DataFormatter.autoFormat(xlabel, val, false) },
+        formatter: (val) => { return DataFormatter.autoFormat(props.direction === 'horizontal' ? ylabel : xlabel , val, false) },
         style: { colors: '#94a3b8', fontSize: '11px' }
       },
       axisBorder: { show: false },
