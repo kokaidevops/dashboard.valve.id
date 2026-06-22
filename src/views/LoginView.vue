@@ -109,8 +109,6 @@ const handleSubmit = () => {
     loading.value = false;
     
     if (response.success) {
-      // Simpan sesi ke Pinia & LocalStorage dengan enkapsulasi waktu aktivitas
-      console.log(response)
       authStore.login(
         { id: response.user.id, name: response.user.name, email: response.user.email },
         response.token

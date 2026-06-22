@@ -17,7 +17,6 @@
 
 <script setup>
 import { computed } from 'vue';
-import { useDashboardStore } from '../../store/dashboard';
 
 const emit = defineEmits(['chart-click']);
 
@@ -31,8 +30,6 @@ const props = defineProps({
     default: () => []
   }
 });
-
-const store = useDashboardStore();
 
 // Dapatkan nama kolom dari data SQL
 const columns = computed(() => props.data.length > 0 ? Object.keys(props.data[0]) : []);
@@ -120,7 +117,7 @@ const chartOptions = computed(() => {
     legend: {
       show: true,
       position: 'bottom',
-      horizontalAlign: 'center',
+      horizontalAlign: 'left',
       fontSize: '11px',
       labels: { colors: '#64748b' },
       markers: { radius: 6 }

@@ -49,10 +49,8 @@ const props = defineProps({
   isCurrency: { type: Boolean, default: false }
 });
 
-// Deteksi apakah tren bernilai positif (Grow Up) atau negatif (Grow Down)
 const isPositive = computed(() => props.percentage >= 0);
 
-// Format angka utama secara otomatis di tingkat komponen
 const formattedValue = computed(() => {
   if (typeof props.value === 'string') return props.value;
   

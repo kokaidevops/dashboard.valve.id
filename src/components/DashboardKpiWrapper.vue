@@ -31,10 +31,10 @@
           <template #empty>
             <div class="text-center py-8 text-xs text-slate-400">Detail rincian data tidak ditemukan.</div>
           </template>
-          <Column v-for="col in drawerColumns" :key="col" :field="col" :header="cleanHeaderLabel(col)" sortable>
+          <Column v-for="col in drawerColumns" :key="col" :field="col" :header="store.cleanHeaderLabel(col)" sortable>
             <template #body="slotProps">
               <span :class="{'font-semibold text-teal-600': col.toLowerCase().includes('omset')}">
-                {{ formatCellData(col, slotProps.data[col]) }}
+                {{ store.formatCellData(col, slotProps.data[col]) }}
               </span>
             </template>
           </Column>
@@ -59,8 +59,6 @@ const drawerVisible = ref(false);
 const drawerLoading = ref(false);
 const drawerData = ref([]);
 
-const cleanHeaderLabel = (text) => text.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-
 const drawerColumns = computed(() => {
   if (drawerData.value.length === 0) return [];
   
@@ -83,7 +81,7 @@ function handleDynamicCardClick() {
   drawerLoading.value = true;
 
   // Tembak ke Node.js Bridge Server
-  store.socket.emit('get_chart_detail_multi', { itemId: props.item.id, filters: {} }, (res) => {
+  store.socket.emit('get_chart_detail_multi', { itemId: props.item.id, filters: store.applyFilter }, (res) => {
     drawerLoading.value = false;
     if (res.success) {
       drawerData.value = res.data;
@@ -112,56 +110,4 @@ onMounted(() => {
 watch(() => store.applyFilter, () => {
   loadDashboard();
 }, { deep: true });
-
-// ── UTALITAS FORMATTER DATA SAAS ──
-
-// 1. Format Angka ke Rupiah (Mendeteksi kolom bernilai uang/omset)
-function formatRupiah(value) {
-  if (value === null || value === undefined || isNaN(value)) return '-';
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
-  }).format(value);
-}
-
-// 2. Format ISO Bulan (YYYY-MM) menjadi Teks Indonesia (Maret 2026)
-function formatBulanIndo(value) {
-  if (!value || typeof value !== 'string') return value;
-  
-  // Mencocokkan pola format YYYY-MM (e.g., 2026-03)
-  const regexBulan = /^\d{4}-\d{2}$/;
-  if (!regexBulan.test(value)) return value; // Jika bukan format YYYY-MM, kembalikan teks asli
-
-  const [tahun, bulan] = value.split('-');
-  const namaBulan = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-  ];
-
-  const indexBulan = parseInt(bulan, 10) - 1;
-  return `${namaBulan[indexBulan]} ${tahun}`;
-}
-
-// 3. Parser Utama: Menentukan kapan format harus diterapkan berdasarkan nama teknis kolom SQL
-function formatCellData(colName, value) {
-  const lowerCol = colName.toLowerCase();
-  
-  // Deteksi kolom uang (omset, penjualan, revenue, total_amount, nilai_kerugian, dll)
-  if (lowerCol.includes('omset') || lowerCol.includes('sales') || lowerCol.includes('revenue') || lowerCol.includes('harga') || lowerCol.includes('nominal') || lowerCol.includes('nilai')) {
-    return formatRupiah(value);
-  }
-  
-  // Deteksi kolom waktu/periode
-  if (lowerCol === 'periode' || lowerCol === 'bulan') {
-    return formatBulanIndo(value);
-  }
-  
-  // Jika kolom teks biasa atau angka murni (seperti jumlah lead, qty stok)
-  if (typeof value === 'number') {
-    return value.toLocaleString('id-ID'); // Berikan pemisah ribuan standar (e.g., 1.500)
-  }
-
-  return value;
-}
 </script>

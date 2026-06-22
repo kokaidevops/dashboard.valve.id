@@ -24,15 +24,11 @@ const router = createRouter({
   ]
 });
 
-// Pengecekan Pintu Depan (Navigation Guard)
 router.beforeEach((to) => {
   const authStore = useAuthStore();
-
-  // Jika mencoba ke halaman login padahal sudah login, kembalikan ke utama
   if (to.name === 'login' && authStore.isAuthenticated) {
     return { path: '/' };
   }
-
 });
 
 export default router;

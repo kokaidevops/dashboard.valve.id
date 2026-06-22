@@ -20,19 +20,6 @@ import { useDashboardStore } from '../../store/dashboard';
 
 const emit = defineEmits(['chart-click']);
 
-function formatBulanIndo(value) {
-  if (!value || typeof value !== 'string') return value;
-  const regexBulan = /^\d{4}-\d{2}$/;
-  if (!regexBulan.test(value)) return value;
-  
-  const [tahun, bulan] = value.split('-');
-  const namaBulan = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-  ];
-  return `${namaBulan[parseInt(bulan, 10) - 1]} ${tahun}`;
-}
-
 const props = defineProps({
   type: {
     type: String,
@@ -53,34 +40,97 @@ const store = useDashboardStore();
 // 1. Dapatkan daftar nama kolom SQL secara dinamis
 const columns = computed(() => props.data.length > 0 ? Object.keys(props.data[0]) : []);
 
+const transformedData = computed(() => {
+  if (props.data.length === 0) return { categories: [], series: [] };
+
+  // Ambil nama-nama key kolom dari data hasil query SQL
+  const keys = Object.keys(props.data[0]);
+  const xKey = keys[0]; // Kolom pertama (e.g., 'periode' -> X-Axis)
+  
+  // Deteksi Multi-Series: Jika query SQL menghasilkan 3 kolom atau lebih
+  const isMultiSeries = keys.length >= 3;
+
+  // Mendapatkan list unik untuk sumbu X (Categories) secara berurutan
+  const categories = [...new Set(props.data.map(row => row[xKey]))].sort();
+
+  if (!isMultiSeries) {
+    // Jalur Single-Series (Contoh: Hanya kolom Periode dan Total)
+    const yKey = keys[1];
+    const seriesData = categories.map(cat => {
+      const found = props.data.find(row => row[xKey] === cat);
+      return found ? found[yKey] : 0;
+    });
+
+    return {
+      categories,
+      series: [{ name: store.cleanHeaderLabel(yKey), data: seriesData }]
+    };
+  } else {
+    // Jalur Multi-Series (Contoh: Kolom Periode, Kategori_Site, dan Total)
+    const groupKey = keys[1]; // Kolom kedua (e.g., 'kategori' -> Legend)
+    const valueKey = keys[2]; // Kolom ketiga (e.g., 'total' -> Nilai Y)
+
+    // Dapatkan semua nama group/kategori unik (e.g., [Tambang A, Tambang B])
+    const uniqueGroups = [...new Set(props.data.map(row => row[groupKey]))];
+
+    // Bentuk struktur array objek sesuai standarisasi multi-series ApexCharts
+    const series = uniqueGroups.map(groupName => {
+      const dataSeries = categories.map(cat => {
+        // Cari baris data yang COCOK antara Periode X dan Kategori Group Y
+        const found = props.data.find(row => row[xKey] === cat && row[groupKey] === groupName);
+        return found ? Number(found[valueKey]) : 0; // Kembalikan 0 jika tidak ada data di periode tersebut
+      });
+
+      return {
+        name: String(groupName),
+        data: dataSeries
+      };
+    });
+
+    return { categories, series };
+  }
+});
+
 // 2. GENERATE OPTIONS (KONFIGURASI GRAFIK) ADAPTIF SINKRON TEMA
 const chartOptions = computed(() => {
-  const xKey = columns.value[0] || 'category';
+  const categories = transformedData.value.categories;
+  function triggerDrilldown(dataPointIndex) {
+    if (dataPointIndex === -1 || dataPointIndex === undefined) return;
+    const categoryKey = columns.value[0];
+    const selectedCategory = categories[dataPointIndex];
 
+    if (selectedCategory) {
+      console.log(`[Graph Click Debug] Terdeteksi klik pada: ${categoryKey} = ${selectedCategory}`);
+      emit('chart-click', { key: categoryKey, value: selectedCategory });
+    }
+  }
   return {
     chart: {
       id: `chart-xy-${Math.random()}`,
+      stacked: false, // Set 'true' jika ingin model grafik balok bertumpuk
       toolbar: { show: false }, // Hilangkan tombol bawaan apex yang mengganggu kebersihan UI SaaS
       background: 'transparent',
       fontFamily: '"Plus Jakarta Sans", sans-serif',
       events: {
         dataPointSelection: (event, chartContext, config) => {
-          // Validasi ketat: pastikan user benar-benar mengklik titik data yang valid
-          if (config && config.dataPointIndex !== undefined && config.dataPointIndex !== -1) {
-            const categoryKey = columns.value[0];
-            
-            // Ambil data baris secara aman berdasarkan dataPointIndex dari ApexCharts
-            const activeRow = props.data[config.dataPointIndex];
-            
-            if (activeRow) {
-              const selectedValue = activeRow[categoryKey];
-              console.log(`[Graph Click Debug] Terdeteksi klik pada: ${categoryKey} = ${selectedValue}`);
-              
-              emit('chart-click', { key: categoryKey, value: selectedValue });
-            }
-          }
+          triggerDrilldown(config.dataPointIndex);
+        },
+        click: function(event, chartContext, config) {
+          triggerDrilldown(config.dataPointIndex);
+        },
+        markerClick: function(event, chartContext, config) {
+          triggerDrilldown(config.dataPointIndex);
         }
       },
+    },
+    markers: {
+      size: props.type === 'line' || props.type === 'area' ? 4 : 0,
+      strokeWidth: 2,
+      strokeColors: '#ffffff',
+      hover: {
+        size: 6,
+        sizeOffset: 3
+      }
     },
     // Kustomisasi warna aksen SaaS (Turquoise, Indigo, Amber, Rose)
     colors: ['#14b8a6', '#6366f1', '#f59e0b', '#f43f5e', '#10b981'],
@@ -106,21 +156,13 @@ const chartOptions = computed(() => {
       borderColor: '#f1f5f9',
       strokeDashArray: 4,
     },
-    xaxis: {
-      categories: props.data.map(row => row[xKey]),
-      labels: {
-        style: { colors: '#94a3b8', fontSize: '11px' }
-      },
-      axisBorder: { show: false },
-      axisTicks: { show: false }
-    },
     yaxis: {
       labels: {
         style: { colors: '#94a3b8', fontSize: '11px' }
       }
     },
     xaxis: {
-      categories: props.data.map(row => row[xKey]),
+      categories: categories,
       labels: {
         style: { colors: '#94a3b8', fontSize: '11px' }
       },
@@ -149,37 +191,5 @@ const chartOptions = computed(() => {
 });
 
 // 3. GENERATE SERIES DATA (TRANSFORMASI SQL DATA KE APEX DATA STRUCT)
-const chartSeries = computed(() => {
-  if (props.data.length === 0) return [];
-  const xKey = columns.value[0];
-
-  // SKENARIO A: JIKA STRUKTUR DATA MULTI-SERIES (Kueri SQL menghasilkan 3 Kolom)
-  // Contoh: [ { bulan: 'Jan', departemen: 'HR', total: 10 }, { bulan: 'Jan', departemen: 'IT', total: 15 } ]
-  if (columns.value.length > 2) {
-    const seriesKey = columns.value[1]; // Kolom pemecah group (e.g., departemen)
-    const valueKey = columns.value[2];  // Kolom nilai (e.g., total)
-    
-    // Cari daftar nama grup yang unik
-    const uniqueSeriesNames = [...new Set(props.data.map(row => row[seriesKey]))];
-    
-    return uniqueSeriesNames.map(name => {
-      return {
-        name: String(name).toUpperCase(),
-        data: props.data
-          .filter(row => row[seriesKey] === name)
-          .map(row => Number(row[valueKey]))
-      };
-    });
-  }
-
-  // SKENARIO B: JIKA STRUKTUR DATA SINGLE-SERIES STANDAR (Kueri SQL menghasilkan 2 Kolom)
-  // Contoh: [ { bulan: 'Jan', total_penjualan: 50000000 } ]
-  const yKey = columns.value[1] || 'value';
-  const seriesLabel = yKey.replace(/_/g, ' ').toUpperCase();
-
-  return [{
-    name: seriesLabel,
-    data: props.data.map(row => Number(row[yKey]))
-  }];
-});
+const chartSeries = computed(() => transformedData.value.series);
 </script>

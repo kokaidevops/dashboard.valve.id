@@ -41,10 +41,10 @@
           <template #empty>
             <div class="text-center py-12 text-xs text-slate-400 italic">Tidak ada baris data.</div>
           </template>
-          <Column v-for="col in tableColumns" :key="col" :field="col" :header="cleanHeaderLabel(col)" sortable>
+          <Column v-for="col in tableColumns" :key="col" :field="col" :header="store.cleanHeaderLabel(col)" sortable>
             <template #body="slotProps">
               <span :class="{'font-semibold text-teal-600': col.toLowerCase().includes('omset')}">
-                {{ formatCellData(col, slotProps.data[col]) }}
+                {{ store.formatCellData(col, slotProps.data[col]) }}
               </span>
             </template>
           </Column>
@@ -75,10 +75,10 @@
           <template #empty>
             <div class="text-center py-8 text-xs text-slate-400">Detail rincian data tidak ditemukan.</div>
           </template>
-          <Column v-for="col in drawerColumns" :key="col" :field="col" :header="cleanHeaderLabel(col)" sortable>
+          <Column v-for="col in drawerColumns" :key="col" :field="col" :header="store.cleanHeaderLabel(col)" sortable>
             <template #body="slotProps">
               <span :class="{'font-semibold text-teal-600': col.toLowerCase().includes('omset')}">
-                {{ formatCellData(col, slotProps.data[col]) }}
+                {{ store.formatCellData(col, slotProps.data[col]) }}
               </span>
             </template>
           </Column>
@@ -111,43 +111,40 @@ const drawerLoading = ref(false);
 const drawerData = ref([]);
 const selectedCategoryLabel = ref('');
 
-// Format Otomatis Nama Kolom SQL Database (e.g., 'total_amount' -> 'Total Amount')
-const cleanHeaderLabel = (text) => text.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-
-// Ambil Struktur Kolom Dinamis Berdasarkan Key Data yang Masuk
-const tableColumns = computed(() => {
-  if (rawData.value.length === 0) return [];
-  
-  return Object.keys(rawData.value[0]).filter(col => {
+const getHeader = (value) => {
+  if (value.length === 0) return [];
+  return Object.keys(value[0]).filter(col => {
     const lowerCol = col.toLowerCase();
-    // Mengecualikan kolom bernama murni 'id' atau yang berakhiran '_id' (e.g., partner_id, user_id)
     return lowerCol !== 'id' && !lowerCol.endsWith('_id');
   });
-});
-const drawerColumns = computed(() => {
-  if (drawerData.value.length === 0) return [];
-  
-  return Object.keys(drawerData.value[0]).filter(col => {
-    const lowerCol = col.toLowerCase();
-    // Mengecualikan kolom bernama murni 'id' atau yang berakhiran '_id' (e.g., partner_id, user_id)
-    return lowerCol !== 'id' && !lowerCol.endsWith('_id');
-  });
-});
+}
 
-// Sinkronisasi Data Real-time (Push Update dari Node.js / Odoo Bridge)
-watch(() => props.item.realtimeData, (newData) => {
-  if (newData) {
-    rawData.value = newData;
-  }
-}, { deep: true });
-
-// Pemuatan Data Pertama Kali (Initial Pull) Saat Kartu Terpasang
-onMounted(() => {
+function loadDashboard() {
   store.socket.emit('get_chart_data', { itemId: props.item.id, filters: store.applyFilter }, (res) => {
     if (res.success) {
       rawData.value = res.data;
     }
   });
+}
+
+// Ambil Struktur Kolom Dinamis Berdasarkan Key Data yang Masuk
+const tableColumns = computed(() => {
+  return getHeader(rawData.value);
+});
+const drawerColumns = computed(() => {
+  return getHeader(drawerData.value);
+});
+// Sinkronisasi Data Real-time (Push Update dari Node.js / Odoo Bridge)
+watch(() => store.applyFilter, () => {
+  loadDashboard();
+}, { deep: true });
+watch(() => props.item.realtimeData, (newData) => {
+  if (newData) { rawData.value = newData; }
+}, { deep: true });
+
+// Pemuatan Data Pertama Kali (Initial Pull) Saat Kartu Terpasang
+onMounted(() => {
+  loadDashboard();
 });
 
 // INTERSEPTOR KLIK UNTUK DIALOKASIKAN KE MULTI-FILTER DRILLDOWN DRAWER
@@ -184,57 +181,5 @@ function handleTableDynamicRowClick(event) {
     // Teruskan ke fungsi drilldown utama kita yang sudah dinamis
     handleDynamicChartClick({ key: categoryKey, value: selectedValue });
   }
-}
-
-// ── UTALITAS FORMATTER DATA SAAS ──
-
-// 1. Format Angka ke Rupiah (Mendeteksi kolom bernilai uang/omset)
-function formatRupiah(value) {
-  if (value === null || value === undefined || isNaN(value)) return '-';
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
-  }).format(value);
-}
-
-// 2. Format ISO Bulan (YYYY-MM) menjadi Teks Indonesia (Maret 2026)
-function formatBulanIndo(value) {
-  if (!value || typeof value !== 'string') return value;
-  
-  // Mencocokkan pola format YYYY-MM (e.g., 2026-03)
-  const regexBulan = /^\d{4}-\d{2}$/;
-  if (!regexBulan.test(value)) return value; // Jika bukan format YYYY-MM, kembalikan teks asli
-
-  const [tahun, bulan] = value.split('-');
-  const namaBulan = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-  ];
-
-  const indexBulan = parseInt(bulan, 10) - 1;
-  return `${namaBulan[indexBulan]} ${tahun}`;
-}
-
-// 3. Parser Utama: Menentukan kapan format harus diterapkan berdasarkan nama teknis kolom SQL
-function formatCellData(colName, value) {
-  const lowerCol = colName.toLowerCase();
-  
-  // Deteksi kolom uang (omset, penjualan, revenue, total_amount, nilai_kerugian, dll)
-  if (lowerCol.includes('omset') || lowerCol.includes('sales') || lowerCol.includes('revenue') || lowerCol.includes('harga') || lowerCol.includes('nominal') || lowerCol.includes('nilai')) {
-    return formatRupiah(value);
-  }
-  
-  // Deteksi kolom waktu/periode
-  if (lowerCol === 'periode' || lowerCol === 'bulan') {
-    return formatBulanIndo(value);
-  }
-  
-  // Jika kolom teks biasa atau angka murni (seperti jumlah lead, qty stok)
-  if (typeof value === 'number') {
-    return value.toLocaleString('id-ID'); // Berikan pemisah ribuan standar (e.g., 1.500)
-  }
-
-  return value;
 }
 </script>

@@ -56,7 +56,7 @@
           :key="item.id" 
           :item="item" 
         />
-        <div 
+        <!-- <div 
           v-for="item in store.dashboardItems.filter(item => item.chart_type !== 'card')" 
           :key="item.id"
           :class="[
@@ -66,8 +66,13 @@
           ]"
           class="transition-all duration-300 transform"
         >
-          <DashboardItem :item="item" />
-        </div>
+        </div> -->
+        <DashboardItem 
+          v-for="item in store.dashboardItems.filter(item => item.chart_type !== 'card')" 
+          :key="item.id"
+          :item="item" 
+          :class="determineGridSpan(item.size)"
+        />
       </div>
 
       <div 
@@ -97,6 +102,19 @@ import DashboardKpiWrapper from '../components/DashboardKpiWrapper.vue';
 
 const route = useRoute();
 const store = useDashboardStore();
+
+function determineGridSpan(size) {
+  switch (size) {
+    case 'small':
+      return 'col-span-1'; 
+    case 'medium':
+      return 'md:col-span-2 xl:col-span-2';
+    case 'full':
+      return 'md:col-span-2 xl:col-span-3';
+    default:
+      return 'col-span-1';
+  }
+}
 
 const loadDashboardContent = () => {
   const slug = route.params.slug;
