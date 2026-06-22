@@ -155,7 +155,7 @@ function handleDynamicChartClick(payload) {
   selectedCategoryLabel.value = value;
   
   // Susun filter dinamis secara instan berdasarkan kolom sumbu X grafik tersebut
-  const filters = { [key]: value };
+  const filters = { [key]: value, ...store.applyFilter };
 
   // Buka laci samping dan hidupkan animasi loading
   drawerVisible.value = true;

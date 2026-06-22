@@ -51,7 +51,7 @@ const transformedData = computed(() => {
   const isMultiSeries = keys.length >= 3;
 
   // Mendapatkan list unik untuk sumbu X (Categories) secara berurutan
-  const categories = [...new Set(props.data.map(row => row[xKey]))].sort();
+  const categories = [...new Set(props.data.map(row => row[xKey]))];
 
   if (!isMultiSeries) {
     // Jalur Single-Series (Contoh: Hanya kolom Periode dan Total)
