@@ -7,6 +7,7 @@
     :icon="item.icon" 
     :isCurrency="item.xaxis_value_type.toLowerCase() === 'currency'" 
     @card-click="handleDynamicCardClick"
+    class="col-span-2"
   />
 
   <Drawer v-model:visible="drawerVisible" position="right" class="w-full md:w-140! lg:w-180! bg-slate-200 border-l border-slate-100">
