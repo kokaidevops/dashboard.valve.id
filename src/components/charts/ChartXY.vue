@@ -99,7 +99,7 @@ const chartOptions = computed(() => {
     const selectedCategory = categories[dataPointIndex];
     const xlabelClean = DataFormatter.autoFormat(xlabel);
     if (selectedCategory) {
-      console.log(`[Graph Click Debug] Terdeteksi klik pada: ${xlabel} = ${selectedCategory}`);
+      console.log(`[Graph Click Debug] Terdeteksi klik pada: ${xlabelClean} = ${selectedCategory}`);
       emit('chart-click', { key: xlabel, value: selectedCategory });
     }
   }
