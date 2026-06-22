@@ -50,23 +50,12 @@
         </div>
       </div>
 
-      <div v-else-if="store.dashboardItems.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div v-else-if="store.dashboardItems.length > 0" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
         <DashboardKpiWrapper 
           v-for="item in store.dashboardItems.filter(item => item.chart_type === 'card')" 
           :key="item.id" 
           :item="item" 
         />
-        <!-- <div 
-          v-for="item in store.dashboardItems.filter(item => item.chart_type !== 'card')" 
-          :key="item.id"
-          :class="[
-            ['pie', 'donut', 'polarArea', 'radialBar'].includes(item.chart_type) 
-              ? 'col-span-1' 
-              : 'col-span-1 md:col-span-2 lg:col-span-3'
-          ]"
-          class="transition-all duration-300 transform"
-        >
-        </div> -->
         <DashboardItem 
           v-for="item in store.dashboardItems.filter(item => item.chart_type !== 'card')" 
           :key="item.id"
@@ -106,13 +95,13 @@ const store = useDashboardStore();
 function determineGridSpan(size) {
   switch (size) {
     case 'small':
-      return 'col-span-1'; 
+      return 'col-span-2'; 
     case 'medium':
-      return 'md:col-span-2 xl:col-span-2';
-    case 'full':
       return 'md:col-span-2 xl:col-span-3';
+    case 'full':
+      return 'md:col-span-4 xl:col-span-6';
     default:
-      return 'col-span-1';
+      return 'col-span-2';
   }
 }
 
