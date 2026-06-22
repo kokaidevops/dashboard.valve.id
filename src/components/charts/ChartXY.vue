@@ -94,15 +94,17 @@ const chartOptions = computed(() => {
   const categories = transformedData.value.categories;
   const xlabel = columns.value[0];
   const ylabel = columns.value[columns.value.length - 1];
+
   function triggerDrilldown(dataPointIndex) {
     if (dataPointIndex === -1 || dataPointIndex === undefined) return;
     const selectedCategory = categories[dataPointIndex];
-    const xlabelClean = DataFormatter.autoFormat(xlabel);
+    const xlabelClean = DataFormatter.cleanHeaderLabel(xlabel);
     if (selectedCategory) {
-      console.log(`[Graph Click Debug] Terdeteksi klik pada: ${xlabelClean} = ${selectedCategory}`);
-      emit('chart-click', { key: xlabel, value: selectedCategory });
+      console.log(`[Graph Click Debug] Terdeteksi klik pada: ${xlabelClean.toLowerCase()} = ${selectedCategory}`);
+      emit('chart-click', { key: xlabelClean.toLowerCase(), value: selectedCategory });
     }
   }
+
   return {
     chart: {
       id: `chart-xy-${Math.random()}`,

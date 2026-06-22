@@ -60,10 +60,10 @@ const chartOptions = computed(() => {
           const activeRow = props.data[config.dataPointIndex];
           
           if (activeRow) {
-            const selectedValue = activeRow[categoryKey];
-            console.log(`[Graph Click Debug] Terdeteksi klik pada: ${categoryKey} = ${selectedValue}`);
+            const selectedValue = activeRow[columns.value[0]];
+            console.log(`[Graph Click Debug] Terdeteksi klik pada: ${categoryKey.toLowerCase()} = ${selectedValue}`);
             // Emit data keluar menuju DashboardItem.vue
-            emit('chart-click', { key: categoryKey, value: selectedValue });
+            emit('chart-click', { key: categoryKey.toLowerCase(), value: selectedValue });
           }
         }
       }
