@@ -16,7 +16,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { useDashboardStore } from '../../store/dashboard';
+import { DataFormatter } from '../../utils/formatter.js';
 
 const emit = defineEmits(['chart-click']);
 
@@ -34,8 +34,6 @@ const props = defineProps({
     default: 'vertical'
   },
 });
-
-const store = useDashboardStore();
 
 // 1. Dapatkan daftar nama kolom SQL secara dinamis
 const columns = computed(() => props.data.length > 0 ? Object.keys(props.data[0]) : []);
@@ -63,7 +61,7 @@ const transformedData = computed(() => {
 
     return {
       categories,
-      series: [{ name: store.cleanHeaderLabel(yKey), data: seriesData }]
+      series: [{ name: DataFormatter.cleanHeaderLabel(yKey), data: seriesData }]
     };
   } else {
     // Jalur Multi-Series (Contoh: Kolom Periode, Kategori_Site, dan Total)
@@ -94,14 +92,15 @@ const transformedData = computed(() => {
 // 2. GENERATE OPTIONS (KONFIGURASI GRAFIK) ADAPTIF SINKRON TEMA
 const chartOptions = computed(() => {
   const categories = transformedData.value.categories;
+  const xlabel = columns.value[0];
+  const ylabel = columns.value[columns.value.length - 1];
   function triggerDrilldown(dataPointIndex) {
     if (dataPointIndex === -1 || dataPointIndex === undefined) return;
-    const categoryKey = columns.value[0];
     const selectedCategory = categories[dataPointIndex];
 
     if (selectedCategory) {
-      console.log(`[Graph Click Debug] Terdeteksi klik pada: ${categoryKey} = ${selectedCategory}`);
-      emit('chart-click', { key: categoryKey, value: selectedCategory });
+      console.log(`[Graph Click Debug] Terdeteksi klik pada: ${xlabel} = ${selectedCategory}`);
+      emit('chart-click', { key: xlabel, value: selectedCategory });
     }
   }
   return {
@@ -158,17 +157,18 @@ const chartOptions = computed(() => {
     },
     yaxis: {
       labels: {
+        formatter: (val) => { return DataFormatter.autoFormat(ylabel, val, false) },
         style: { colors: '#94a3b8', fontSize: '11px' }
       }
     },
     xaxis: {
       categories: categories,
       labels: {
+        formatter: (val) => { return DataFormatter.autoFormat(xlabel, val, false) },
         style: { colors: '#94a3b8', fontSize: '11px' }
       },
       axisBorder: { show: false },
       axisTicks: { show: false },
-      // Mengaktifkan bayangan lajur vertikal yang mengikuti kursor mouse
       crosshairs: {
         show: true,
         width: props.type === 'line' ? 2 : 'auto', // Garis tipis pemandu khusus tipe line

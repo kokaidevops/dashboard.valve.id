@@ -1,24 +1,22 @@
 /**
- * Utility Formatter Data Global untuk Dashboard Engine ERP
+ * Utility Formatter Data Global for Dashboard Engine ERP
  */
 
-// Kamus nama-nama bulan dalam Bahasa Indonesia
-const BULAN_INDO = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+const MONTH_NAME = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+  'Jul', 'Agst', 'Sept', 'Okt', 'Nov', 'Des'
 ];
 
 export const DataFormatter = {
   /**
-   * 1. Format Mata Uang Rupiah (Dengan opsi penyederhanaan Jutaan/Miliar)
-   * @param {number} value - Angka mentah
-   * @param {boolean} compact - Jika true, Rp 1.500.000 menjadi Rp 1,5 Jt
+   * 1. Currency Format in Rupiah (with million/billion simplification option)
+   * @param {number} value - raw value
+   * @param {boolean} compact - if true, Rp 1.500.000 become Rp 1,5 Jt
    */
-  formatRupiah(value, compact = false) {
+  formatCurrency(value, compact = false) {
     if (value === null || value === undefined || isNaN(value)) return 'Rp 0';
     
     const num = Number(value);
-
     if (compact) {
       if (Math.abs(num) >= 1_000_000_000_000) {
         return `Rp ${(num / 1_000_000_000_000).toFixed(1).replace('.', ',')} T`;
@@ -31,7 +29,7 @@ export const DataFormatter = {
       }
     }
 
-    // Format standard penuh: Rp 150.000.000
+    // Format standard: Rp 150.000.000
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -41,8 +39,8 @@ export const DataFormatter = {
   },
 
   /**
-   * 2. Format Penyederhanaan Angka Kuantitas Biasa (Non-Mata Uang)
-   * Contoh: 15000 -> 15K, 2500000 -> 2,5M (Million)
+   * 2. Format simplification for normal qty (Non-Currency)
+   * ex: 15000 -> 15K, 2500000 -> 2,5M (Million)
    */
   formatCompactNumber(value) {
     if (value === null || value === undefined || isNaN(value)) return '0';
@@ -53,9 +51,9 @@ export const DataFormatter = {
   },
 
   /**
-   * 3. Format Persentase
-   * @param {number} value - Angka desimal (0.125) atau angka bulat (12.5)
-   * @param {boolean} isLiteral - Set true jika data dari SQL sudah berbentuk angka bulat (e.g. 12.4)
+   * 3. Format Percentage
+   * @param {number} value - Decimal number (0.125) or round number (12.5)
+   * @param {boolean} isLiteral - Set true if data from SQL is already round number (e.g. 12.4)
    */
   formatPercentage(value, isLiteral = true) {
     if (value === null || value === undefined || isNaN(value)) return '0%';
@@ -68,78 +66,60 @@ export const DataFormatter = {
   },
 
   /**
-   * 4. Format Tanggal, Bulan, dan Periode secara Cerdas
+   * 4. Format Date, Month, dan Period
    */
-  formatDateTime(value, type = 'date') {
+  formatDateTime(value, type = 'month') {
     if (!value) return '-';
     
-    // Jika formatnya string periode dari SQL Odoo (e.g., "2026-03")
+    // If format is period from SQL Odoo (e.g., "2026-03")
     if (typeof value === 'string' && /^\d{4}-\d{2}$/.test(value)) {
-      const [tahun, bulan] = value.split('-');
-      const namaBulan = BULAN_INDO[parseInt(bulan, 10) - 1];
-      return namaBulan ? `${namaBulan} ${tahun}` : value;
+      const [year, month] = value.split('-');
+      const monthName = MONTH_NAME[parseInt(month, 10) - 1];
+      return monthName ? `${monthName} ${year}` : value;
     }
 
     const date = new Date(value);
-    if (isNaN(date.getTime())) return String(value); // Kembalikan string asli jika gagal konversi tanggal
+    if (isNaN(date.getTime())) return String(value); // Return original string if failed to conversion
 
     if (type === 'year') return String(date.getFullYear());
-    if (type === 'month') return BULAN_INDO[date.getMonth()];
+    if (type === 'month') return `${MONTH_NAME[date.getMonth()]} ${date.getFullYear()}`;
     
-    // Format lengkap: 21 Juni 2026
-    return `${date.getDate()} ${BULAN_INDO[date.getMonth()]} ${date.getFullYear()}`;
+    // Full format: 21 Juni 2026
+    return `${date.getDate()} ${MONTH_NAME[date.getMonth()]} ${date.getFullYear()}`;
   },
 
   /**
-   * 5. MASTER ENGINE: Pendeteksi Otomatis Berdasarkan Nama Kolom (Key)
-   * Fungsi ini memetakan data secara otomatis agar Anda tidak perlu menulis if-else di komponen UI
+   * 5. MASTER ENGINE: Automatic conversion column name
    */
-  autoFormat(key, value, forceCompact = false) {
+  autoFormat(key, value, forceCompact = false, type = 'date') {
     if (value === null || value === undefined || value === '') return '-';
     
     const lowerKey = key.toLowerCase();
+    const regex = /:\s*(?<value>.+)/;
+    const match = regex.exec(lowerKey);
+    const col = match ? match.groups.value : lowerKey;
 
-    // Jalur A: Deteksi Mata Uang (Revenue, Omset, Harga, Nominal, Total, dll)
-    if (
-      lowerKey.includes('revenue') || 
-      lowerKey.includes('omset') || 
-      lowerKey.includes('sales') || 
-      lowerKey.includes('harga') || 
-      lowerKey.includes('nominal') || 
-      lowerKey.includes('amount') || 
-      lowerKey.includes('total')
-    ) {
-      return this.formatRupiah(value, forceCompact);
-    }
+    switch (col) {
+      case 'currency':
+        return this.formatCurrency(value, forceCompact);
+        case 'percentage':
+          return this.formatPercentage(value, true);
+        case 'month':
+          return this.formatDateTime(value, type);
+        case 'number':
+          return forceCompact ? this.formatCompactNumber(value) : value.toLocaleString('id-ID');
+        case 'day':
+          return `${value} Hari`
+      default:
+        return String(value);
+      }
+  },
 
-    // Jalur B: Deteksi Persentase (Grow, Growth, Margin, Persen, Ratio)
-    if (
-      lowerKey.includes('grow') || 
-      lowerKey.includes('persen') || 
-      lowerKey.includes('margin') || 
-      lowerKey.includes('ratio') || 
-      lowerKey.includes('pct')
-    ) {
-      return this.formatPercentage(value, true);
-    }
-
-    // Jalur C: Deteksi Tanggal & Periode (Tanggal, Date, Periode, Bulan, Created_At)
-    if (
-      lowerKey.includes('tanggal') || 
-      lowerKey.includes('date') || 
-      lowerKey.includes('periode') || 
-      lowerKey.includes('bulan') || 
-      lowerKey.includes('created')
-    ) {
-      return this.formatDateTime(value);
-    }
-
-    // Jalur D: Jika bertipe angka biasa tetapi bernilai besar (Kuantitas Produksi Katup/Mining, dll)
-    if (typeof value === 'number') {
-      return forceCompact ? this.formatCompactNumber(value) : value.toLocaleString('id-ID');
-    }
-
-    // Jalur E: Tipe teks string biasa (Nama customer, nomor dokumen)
-    return String(value);
+  cleanHeaderLabel(text){
+    const lowerText = text.toLowerCase();
+    const regex = /^\s*(?<value>[^:]+?)\s*:/;
+    const match = regex.exec(lowerText);
+    const name = match ? match.groups.value : lowerText;
+    return name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 };

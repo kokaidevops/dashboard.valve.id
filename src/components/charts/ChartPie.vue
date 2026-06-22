@@ -17,6 +17,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { DataFormatter } from '../../utils/formatter.js';
 
 const emit = defineEmits(['chart-click']);
 
@@ -43,8 +44,8 @@ const chartSeries = computed(() => {
 
 // 2. GENERATE OPTIONS & LABELS ADAPTIF
 const chartOptions = computed(() => {
-  const labelKey = columns.value[0]; // Ambil kolom pertama sebagai teks label (e.g., status, kategori)
-  const labelsArray = props.data.map(row => String(row[labelKey] || 'N/A').toUpperCase());
+  const xlabel = columns.value[0]; // Ambil kolom pertama sebagai teks label (e.g., status, kategori)
+  const labelsArray = props.data.map(row => String(row[xlabel] || 'N/A').toUpperCase());
 
   return {
     chart: {
@@ -93,7 +94,7 @@ const chartOptions = computed(() => {
               fontSize: '16px',
               fontWeight: '700',
               color: '#0f172a',
-              formatter: (val) => Number(val).toLocaleString('id-ID')
+              formatter: (val) => DataFormatter.autoFormat(xlabel, val, false)
             },
             total: {
               show: true,
@@ -103,7 +104,7 @@ const chartOptions = computed(() => {
               color: '#94a3b8',
               formatter: (w) => {
                 const totalSum = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
-                return totalSum.toLocaleString('id-ID');
+                return DataFormatter.autoFormat(xlabel, totalSum, false);
               }
             }
           }

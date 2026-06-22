@@ -41,10 +41,10 @@
           <template #empty>
             <div class="text-center py-12 text-xs text-slate-400 italic">Tidak ada baris data.</div>
           </template>
-          <Column v-for="col in tableColumns" :key="col" :field="col" :header="store.cleanHeaderLabel(col)" sortable>
+          <Column v-for="col in tableColumns" :key="col" :field="col" :header="DataFormatter.cleanHeaderLabel(col)" sortable>
             <template #body="slotProps">
               <span :class="{'font-semibold text-teal-600': col.toLowerCase().includes('omset')}">
-                {{ store.formatCellData(col, slotProps.data[col]) }}
+                {{ DataFormatter.autoFormat(col, slotProps.data[col], false) }}
               </span>
             </template>
           </Column>
@@ -75,10 +75,10 @@
           <template #empty>
             <div class="text-center py-8 text-xs text-slate-400">Detail rincian data tidak ditemukan.</div>
           </template>
-          <Column v-for="col in drawerColumns" :key="col" :field="col" :header="store.cleanHeaderLabel(col)" sortable>
+          <Column v-for="col in drawerColumns" :key="col" :field="col" :header="DataFormatter.cleanHeaderLabel(col)" sortable>
             <template #body="slotProps">
-              <span :class="{'font-semibold text-teal-600': col.toLowerCase().includes('omset')}">
-                {{ store.formatCellData(col, slotProps.data[col]) }}
+              <span>
+                {{ DataFormatter.autoFormat(col, slotProps.data[col], false) }}
               </span>
             </template>
           </Column>
@@ -96,6 +96,7 @@ import Column from 'primevue/column';
 import Drawer from 'primevue/drawer';
 import ChartXY from './charts/ChartXY.vue';
 import ChartPie from './charts/ChartPie.vue';
+import { DataFormatter } from '../utils/formatter.js'
 
 const props = defineProps({
   item: Object

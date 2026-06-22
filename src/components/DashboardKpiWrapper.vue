@@ -5,7 +5,7 @@
     :value="data" 
     :percentage="percent" 
     :icon="item.icon" 
-    :isCurrency="item.xaxis_value_type.toLowerCase() === 'currency'" 
+    :label="label"
     @card-click="handleDynamicCardClick"
     class="col-span-2"
   />
@@ -32,10 +32,10 @@
           <template #empty>
             <div class="text-center py-8 text-xs text-slate-400">Detail rincian data tidak ditemukan.</div>
           </template>
-          <Column v-for="col in drawerColumns" :key="col" :field="col" :header="store.cleanHeaderLabel(col)" sortable>
+          <Column v-for="col in drawerColumns" :key="col" :field="col" :header="DataFormatter.cleanHeaderLabel(col)" sortable>
             <template #body="slotProps">
               <span :class="{'font-semibold text-teal-600': col.toLowerCase().includes('omset')}">
-                {{ store.formatCellData(col, slotProps.data[col]) }}
+                {{ DataFormatter.autoFormat(col, slotProps.data[col], false) }}
               </span>
             </template>
           </Column>
@@ -51,6 +51,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Drawer from 'primevue/drawer';
 import KpiCard from './KpiCard.vue';
+import { DataFormatter } from '../utils/formatter.js';
 
 const props = defineProps({
   item: { type: Object, required: true }
@@ -65,7 +66,6 @@ const drawerColumns = computed(() => {
   
   return Object.keys(drawerData.value[0]).filter(col => {
     const lowerCol = col.toLowerCase();
-    // Mengecualikan kolom bernama murni 'id' atau yang berakhiran '_id' (e.g., partner_id, user_id)
     return lowerCol !== 'id' && !lowerCol.endsWith('_id');
   });
 });
@@ -74,14 +74,13 @@ const store = useDashboardStore();
 const loading = ref(true);
 const data = ref(0);
 const percent = ref(0);
+const label = ref('');
 
 function handleDynamicCardClick() {
   console.log("handleDynamicCardClick")
-  // Buka laci samping dan hidupkan animasi loading
   drawerVisible.value = true;
   drawerLoading.value = true;
 
-  // Tembak ke Node.js Bridge Server
   store.socket.emit('get_chart_detail_multi', { itemId: props.item.id, filters: store.applyFilter }, (res) => {
     drawerLoading.value = false;
     if (res.success) {
@@ -95,9 +94,8 @@ function loadDashboard() {
     loading.value = false;
     if (res.success && res.data && res.data.length > 0) {
       const rowData = res.data[0]; // Kpi kueri selalu mengembalikan 1 baris objek teratas
-      
-      // Ambil secara dinamis nilai dari key pertama dan kedua hasil kueri SQL Odoo
       const keys = Object.keys(rowData);
+      label.value = keys[0];
       data.value = parseFloat(rowData[keys[0]]) || 0;
       percent.value = parseFloat(rowData[keys[1]]) || 0;
     }

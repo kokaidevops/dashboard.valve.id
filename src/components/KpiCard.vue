@@ -17,7 +17,7 @@
 
     <div class="my-2 min-w-0">
       <h2 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight truncate">
-        {{ formattedValue }}
+        {{ DataFormatter.autoFormat(label, value, false) }}
       </h2>
     </div>
 
@@ -38,30 +38,16 @@
 
 <script setup>
 import { computed } from 'vue';
-
+import { DataFormatter } from '../utils/formatter.js';
 defineEmits(['card-click']);
 
 const props = defineProps({
   title: { type: String, default: 'KPI Title' },
+  label: { type: String, default: 'Label' },
   value: { type: [Number, String], default: 0 },
   percentage: { type: Number, default: 0 },
   icon: { type: String, default: 'pi-chart-line' },
-  isCurrency: { type: Boolean, default: false }
 });
 
 const isPositive = computed(() => props.percentage >= 0);
-
-const formattedValue = computed(() => {
-  if (typeof props.value === 'string') return props.value;
-  
-  if (props.isCurrency) {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(props.value);
-  }
-  
-  return props.value.toLocaleString('id-ID');
-});
 </script>
