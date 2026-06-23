@@ -6,7 +6,6 @@
     
     <apexchart 
       v-else
-      :key="chartKey"
       :type="type" 
       :options="chartOptions" 
       :series="chartSeries" 
@@ -16,28 +15,23 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { watch, computed, nextTick, ref } from 'vue';
 import { DataFormatter } from '../../utils/formatter.js';
 import { useDashboardStore } from '../../store/dashboard.js';
+import ApexCharts from 'apexcharts';
 
 const store = useDashboardStore();
 
 const emit = defineEmits(['chart-click']);
 
 const props = defineProps({
-  type: {
-    type: String,
-    default: 'bar' // Nilai default: 'bar', 'line', atau 'area'
-  },
-  data: {
-    type: Array,
-    default: () => []
-  },
-  direction: {
-    type: String,
-    default: 'vertical'
-  },
+  type: { type: String, default: 'bar' },
+  data: { type: Array, default: () => [] },
+  direction: { type: String, default: 'vertical' },
+  chartId: { type: String, default: 'chart-xy' },
 });
+
+const filterChange = ref(false);
 
 // 1. Dapatkan daftar nama kolom SQL secara dinamis
 const columns = computed(() => props.data.length > 0 ? Object.keys(props.data[0]) : []);
@@ -93,18 +87,10 @@ const transformedData = computed(() => {
   }
 });
 
-const chartKey = computed(() => {
-  const start = store.applyFilter.start || 'all';
-  const range = store.applyFilter.range || 'all';
-
-  return `chart-${Math.random()}-${start}-${range}`;
-});
-
 // 2. GENERATE OPTIONS (KONFIGURASI GRAFIK) ADAPTIF SINKRON TEMA
 const chartOptions = computed(() => {
   const categories = transformedData.value.categories;
   const xlabel = columns.value[0];
-  const ylabel = columns.value[columns.value.length - 1];
 
   function triggerDrilldown(dataPointIndex) {
     if (dataPointIndex === -1 || dataPointIndex === undefined) return;
@@ -118,7 +104,7 @@ const chartOptions = computed(() => {
 
   return {
     chart: {
-      id: `chart-xy-${Math.random()}`,
+      id: props.chartId,
       stacked: false, // Set 'true' jika ingin model grafik balok bertumpuk
       toolbar: { show: false }, // Hilangkan tombol bawaan apex yang mengganggu kebersihan UI SaaS
       background: 'transparent',
@@ -132,7 +118,7 @@ const chartOptions = computed(() => {
         },
         markerClick: function(event, chartContext, config) {
           triggerDrilldown(config.dataPointIndex);
-        }
+        },
       },
     },
     markers: {
@@ -144,7 +130,6 @@ const chartOptions = computed(() => {
         sizeOffset: 3
       }
     },
-    // Kustomisasi warna aksen SaaS (Turquoise, Indigo, Amber, Rose)
     colors: ['#14b8a6', '#6366f1', '#f59e0b', '#f43f5e', '#10b981'],
     stroke: {
       curve: 'smooth',
@@ -168,12 +153,30 @@ const chartOptions = computed(() => {
       borderColor: '#f1f5f9',
       strokeDashArray: 4,
     },
-    yaxis: {
-      labels: {
-        formatter: (val) => { return DataFormatter.autoFormat(props.direction === 'horizontal' ? xlabel : ylabel , val, false) },
-        style: { colors: '#94a3b8', fontSize: '11px' }
-      }
+    tooltip: {
+      theme: 'light',
+      x: { show: true },
+      style: { fontSize: '12px' },
+      shared: true,
+      intersect: false
     },
+    ...getFormatterConfiguration()
+  };
+});
+
+// 3. GENERATE SERIES DATA (TRANSFORMASI SQL DATA KE APEX DATA STRUCT)
+const chartSeries = computed(() => transformedData.value.series);
+
+function getFormatterConfiguration() {
+  const categories = transformedData.value.categories;
+  const xlabel = columns.value[0];
+  const ylabel = columns.value[columns.value.length - 1];
+
+  if (filterChange.value) {
+    return {};
+  };
+
+  return {
     xaxis: {
       categories: categories,
       labels: {
@@ -184,7 +187,7 @@ const chartOptions = computed(() => {
       axisTicks: { show: false },
       crosshairs: {
         show: true,
-        width: props.type === 'line' ? 2 : 'auto', // Garis tipis pemandu khusus tipe line
+        width: props.type === 'line' ? 2 : 'auto',
         position: 'back',
         stroke: {
           color: '#e2e8f0',
@@ -193,16 +196,35 @@ const chartOptions = computed(() => {
         },
       }
     },
-    tooltip: {
-      theme: 'light',
-      x: { show: true },
-      style: { fontSize: '12px' },
-      shared: true,
-      intersect: false
-    }
-  };
-});
+    yaxis: {
+      labels: {
+        formatter: (val) => { return DataFormatter.autoFormat(props.direction === 'horizontal' ? xlabel : ylabel , val, false) },
+        style: { colors: '#94a3b8', fontSize: '11px' }
+      }
+    },
+  }
+}
 
-// 3. GENERATE SERIES DATA (TRANSFORMASI SQL DATA KE APEX DATA STRUCT)
-const chartSeries = computed(() => transformedData.value.series);
+watch(
+  [() => props.data, () => store.applyFilter],
+  async ([newData]) => {
+    if (newData && newData.length > 0) {
+      await nextTick();
+
+      filterChange.value = true;
+
+      ApexCharts.exec(
+        props.chartId,
+        'updateOptions',
+        {
+          ...getFormatterConfiguration()
+        },
+        false,
+        true
+      );
+    }
+  },
+  { deep: true, immediate: true }
+);
+
 </script>
