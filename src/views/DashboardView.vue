@@ -97,9 +97,9 @@ function determineGridSpan(size) {
     case 'small':
       return 'col-span-2'; 
     case 'medium':
-      return 'md:col-span-2 xl:col-span-3';
+      return 'col-span-2 xl:col-span-3';
     case 'full':
-      return 'md:col-span-4 xl:col-span-6';
+      return 'col-span-2 md:col-span-4 xl:col-span-6';
     default:
       return 'col-span-2';
   }
