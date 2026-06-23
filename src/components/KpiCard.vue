@@ -5,13 +5,23 @@
       <span class="text-xs font-bold text-slate-400 uppercase tracking-wider truncate max-w-[80%]">
         {{ title }}
       </span>
-      <div :class="[
-        'w-8 h-8 rounded-xl flex items-center justify-center border transition-colors',
-        isPositive 
+      <div class="flex items-center justify-center gap-1">
+        <div v-if="hasGoal" :class="[
+          'w-14 h-8 text-xs rounded-xl flex items-center justify-center border transition-colors',
+          achievement < 75
+          ? 'bg-rose-50/60 border-rose-100/70 text-rose-600'
+          : 'bg-teal-50/60 border-teal-100/70 text-teal-600' 
+        ]">
+          {{ DataFormatter.autoFormat(':percentage', achievement, false) }}
+        </div>
+        <div :class="[
+          'w-8 h-8 rounded-xl flex items-center justify-center border transition-colors',
+          isPositive 
           ? 'bg-teal-50/60 border-teal-100/70 text-teal-600' 
           : 'bg-rose-50/60 border-rose-100/70 text-rose-600'
-      ]">
-        <i :class="['pi', icon, 'text-xs']"></i>
+        ]">
+          <i :class="['pi', icon, 'text-xs']"></i>
+        </div>
       </div>
     </div>
 
@@ -46,6 +56,8 @@ const props = defineProps({
   label: { type: String, default: 'Label' },
   value: { type: [Number, String], default: 0 },
   percentage: { type: Number, default: 0 },
+  achievement: { type: Number, default: 0 },
+  hasGoal: { type: Boolean, default: false },
   icon: { type: String, default: 'pi-chart-line' },
 });
 

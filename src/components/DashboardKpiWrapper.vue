@@ -6,6 +6,8 @@
     :percentage="percent" 
     :icon="item.icon" 
     :label="label"
+    :has-goal="item.has_goal"
+    :achievement="achievement"
     @card-click="handleDynamicCardClick"
     class="col-span-2"
   />
@@ -74,6 +76,7 @@ const store = useDashboardStore();
 const loading = ref(true);
 const data = ref(0);
 const percent = ref(0);
+const achievement = ref(0);
 const label = ref('');
 
 function handleDynamicCardClick() {
@@ -98,6 +101,7 @@ function loadDashboard() {
       label.value = keys[0];
       data.value = parseFloat(rowData[keys[0]]) || 0;
       percent.value = parseFloat(rowData[keys[1]]) || 0;
+      achievement.value = parseFloat(rowData[keys[2]]) || 0;
     }
   });
 }
