@@ -1,20 +1,22 @@
 <template>
+  <div v-if="layoutStore.mobileSidebarOpen" class="fixed inset-0 bg-black/30 z-40 lg:hidden" @click="layoutStore.closeMobileSidebar" />
+
   <aside 
     class="fixed lg:relative z-50 bg-white border-r border-slate-200 min-h-screen px-5 py-7 flex flex-col transition-all duration-300"
     :class="[
-      store.isSidebarOpen
-      ? '-translate-x-full lg:translate-x-0'
-      : 'translate-x-0',
-      store.isSidebarOpen ? 'w-24' : 'w-70',
+      layoutStore.mobileSidebarOpen
+      ? 'translate-x-0'
+      : '-translate-x-full lg:translate-x-0',
+      layoutStore.sidebarCollapsed ? 'w-24' : 'w-70',
     ]"
   >
     
     <div class="mb-10">
-      <h1 class="font-bold text-slate-900" :class="store.isSidebarOpen ? 'text-lg' : 'text-2xl'">
-        KIA<span class="text-indigo-600"> Dashboard </span>
+      <h1 class="font-bold text-slate-900" :class="layoutStore.sidebarCollapsed ? 'text-lg' : 'text-2xl'">
+        KIA<span class="text-indigo-600"> {{ layoutStore.sidebarCollapsed ? ' Dash' : ' Dashboard' }} </span>
       </h1>
 
-      <p v-if="!store.isSidebarOpen" class="text-sm text-slate-400 mt-1">
+      <p v-if="!layoutStore.sidebarCollapsed" class="text-sm text-slate-400 mt-1">
         Modern ERP Dashboard
       </p>
     </div>
@@ -36,7 +38,7 @@
       >
         <i :class="['pi', page.icon, 'text-xs text-slate-400 group-hover:text-brand-500 transition-colors']"></i>
         
-        <span  v-if="!store.isSidebarOpen" class="truncate">{{ page.name }}</span>
+        <span  v-if="!layoutStore.sidebarCollapsed" class="truncate">{{ page.name }}</span>
 
         <span 
           v-if="page.access_type === 'private'" 
@@ -49,7 +51,7 @@
     </nav>
 
     <div class="mt-auto flex justify-between items-center gap-3">
-      <div v-if="!store.isSidebarOpen">
+      <div v-if="!layoutStore.sidebarCollapsed">
         <p class="text-xs text-slate-500">PT. Kokai Indo Abadi</p>
       </div>
       <button 
@@ -68,10 +70,12 @@ import { onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useDashboardStore } from '../../store/dashboard';
 import { useAuthStore } from '../../store/auth';
+import { useLayoutStore } from '../../composables/useLayout'
 
 const store = useDashboardStore();
 const authStore = useAuthStore();
 const router = useRouter();
+const layoutStore = useLayoutStore();
 
 onMounted(() => {
   store.fetchSidebarPages();

@@ -1,12 +1,12 @@
 <template>
-  <header class="bg-white border-b border-slate-200 px-6 lg:px-8 py-5 flex justify-between items-center">
+  <header class="bg-white border-b border-slate-200 px-6 lg:px-8 py-5 justify-between items-center grid md:grid-cols-2 sm:grid-rows-2 md:grid-rows-none gap-4">
     <div class="flex items-center gap-4">
-      <button class="lg:hidden w-11 h-11 rounded-2xl bg-slate-100">
+      <button class="lg:hidden w-11 h-11 rounded-2xl bg-slate-100" @click="toggleMobileSidebar">
         <i class="pi pi-bars" />
       </button>
 
       <button class="hidden lg:flex w-11 h-11 rounded-2xl bg-slate-100 items-center justify-center"
-        >
+        @click="toggleSidebar">
         <i class="pi pi-angle-left" />
       </button>
 
@@ -19,7 +19,7 @@
 
     </div>
     
-    <div class="flex items-center gap-4">
+    <div class="flex items-center justify-end gap-4">
       <div class="w-56 flex items-center gap-2 rounded-xl text-[11px]">
         <Dropdown 
           v-model="localFilters.filter" 
@@ -56,10 +56,12 @@ import { reactive } from 'vue';
 import { useAuthStore } from '../../store/auth';
 import { useDashboardStore } from '../../store/dashboard';
 import Dropdown from 'primevue/dropdown';
+import { useLayoutStore } from '../../composables/useLayout.js';
 
 
 const authStore = useAuthStore();
 const dashboardStore = useDashboardStore();
+const { toggleSidebar, toggleMobileSidebar } = useLayoutStore();
 
 const filters = dashboardStore.filters;
 
