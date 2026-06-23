@@ -97,7 +97,7 @@ const chartKey = computed(() => {
   const start = store.applyFilter.start || 'all';
   const range = store.applyFilter.range || 'all';
 
-  return `chart-${props.Math.random()}-${start}-${range}`;
+  return `chart-${Math.random()}-${start}-${range}`;
 });
 
 // 2. GENERATE OPTIONS (KONFIGURASI GRAFIK) ADAPTIF SINKRON TEMA
