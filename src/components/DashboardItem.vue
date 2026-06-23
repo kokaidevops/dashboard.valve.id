@@ -52,7 +52,7 @@
       </div>
     </div>
 
-    <Drawer v-model:visible="drawerVisible" position="right" class="w-full md:w-140! lg:w-180! bg-slate-200 border-l border-slate-100">
+    <Drawer v-model:visible="drawerVisible" position="right" class="w-full md:w-140! lg:w-180! xl:w-260! bg-slate-200 border-l border-slate-100">
       <template #header>
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 rounded-xl bg-slate-500/10 text-slate-500 flex items-center justify-center">
