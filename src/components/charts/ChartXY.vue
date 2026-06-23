@@ -6,6 +6,7 @@
     
     <apexchart 
       v-else
+      :key="chartKey"
       :type="type" 
       :options="chartOptions" 
       :series="chartSeries" 
@@ -17,6 +18,9 @@
 <script setup>
 import { computed } from 'vue';
 import { DataFormatter } from '../../utils/formatter.js';
+import { useDashboardStore } from '../../store/dashboard.js';
+
+const store = useDashboardStore();
 
 const emit = defineEmits(['chart-click']);
 
@@ -87,6 +91,13 @@ const transformedData = computed(() => {
 
     return { categories, series };
   }
+});
+
+const chartKey = computed(() => {
+  const start = store.applyFilter.start || 'all';
+  const range = store.applyFilter.range || 'all';
+
+  return `chart-${props.Math.random()}-${start}-${range}`;
 });
 
 // 2. GENERATE OPTIONS (KONFIGURASI GRAFIK) ADAPTIF SINKRON TEMA
