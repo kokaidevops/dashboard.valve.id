@@ -99,12 +99,21 @@
     <Drawer v-model:visible="drawerVisible" position="right" class="w-full md:w-140! lg:w-180! xl:w-260! bg-slate-200 border-l border-slate-100">
       <template #header>
         <div class="flex items-center gap-3">
+          <div v-if="drawerButton" 
+            class="w-9 h-9 rounded-xl bg-slate-500/10 text-slate-500 flex items-center justify-center" 
+            @click="handleDynamicChartClick({
+              key: store.selectedValue.key, 
+              value: store.selectedValue.value
+            })"
+          >
+            <i class="pi pi-angle-left text-sm"></i>
+          </div>
           <div class="w-9 h-9 rounded-xl bg-slate-500/10 text-slate-500 flex items-center justify-center">
             <i class="pi pi-search-plus text-sm"></i>
           </div>
           <div class="flex flex-col">
             <span class="text-sm font-bold text-slate-900">Analisis Detail Transaksi</span>
-            <span class="text-[10px] text-slate-400 mt-0.5 font-medium">Kategori Terpilih: {{ selectedCategoryLabel }}</span>
+            <span class="text-[10px] text-slate-400 mt-0.5 font-medium">Kategori Terpilih: {{ store.selectedValue.value }}</span>
           </div>
         </div>
       </template>
@@ -115,7 +124,31 @@
           <span class="text-xs text-slate-400">Menarik data dari database...</span>
         </div>
         
-        <DataTable v-else :value="drawerData" :rows="10" showGridlines stripedRows paginator responsiveLayout="scroll">
+        <DataTable v-else 
+          :value="drawerData" 
+          v-model:filters="tableFilters"
+          :globalFilterFields="drawerColumns" 
+          :rows="10" 
+          showGridlines 
+          stripedRows 
+          paginator 
+          responsiveLayout="scroll"
+        >
+          <template #header>
+            <div class="flex justify-end items-center mb-2">
+              <div class="relative w-full max-w-xs">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                  <i class="pi pi-search text-xs"></i>
+                </span>
+                <input 
+                  v-model="tableFilters['global'].value" 
+                  type="text" 
+                  placeholder="Cari rincian data..." 
+                  class="w-full pl-9 pr-4 py-1.5 bg-slate-50 text-xs rounded-xl border border-slate-100 focus:outline-hidden focus:border-brand-500 text-slate-700 font-medium transition-colors"
+                />
+              </div>
+            </div>
+          </template>
           <template #empty>
             <div class="text-center py-8 text-xs text-slate-400">Detail rincian data tidak ditemukan.</div>
           </template>
@@ -124,6 +157,11 @@
               <span>
                 {{ DataFormatter.autoFormat(col, slotProps.data[col], false) }}
               </span>
+            </template>
+          </Column>
+          <Column v-if="props.item.action !== 'no' && !drawerButton" headerStyle="width: 8rem; text-align: center" bodyStyle="text-align: center; overflow: visible">
+            <template #body="slotProps">
+              <Button icon="pi pi-eye" rounded class="mr-2" size="small" severity="secondary" @click="actionButton(slotProps.data)" />
             </template>
           </Column>
         </DataTable>
@@ -135,13 +173,17 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
-import { useDashboardStore } from '../store/dashboard';
-import DataTable from 'primevue/datatable';
+
+import Button from 'primevue/button';
 import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
 import Drawer from 'primevue/drawer';
+
+import { useDashboardStore } from '../store/dashboard';
+import { DataFormatter } from '../utils/formatter.js'
+
 import ChartXY from './charts/ChartXY.vue';
 import ChartPie from './charts/ChartPie.vue';
-import { DataFormatter } from '../utils/formatter.js'
 
 const props = defineProps({
   item: Object
@@ -159,7 +201,7 @@ const rawData = ref([]);
 const drawerVisible = ref(false);
 const drawerLoading = ref(false);
 const drawerData = ref([]);
-const selectedCategoryLabel = ref('');
+const drawerButton = ref(false);
 
 const getHeader = (value) => {
   if (value.length === 0) return [];
@@ -191,29 +233,33 @@ watch(() => rawData.value, () => {
       tableFilters.value[key] = { value: null, matchMode: FilterMatchMode.CONTAINS };
     }
   });
-  console.log(tableFilters.value);
 }, { immediate: true });
+watch(() => drawerVisible.value, () => { 
+  if (!drawerVisible.value) { store.setSelectedValue({}) } 
+}, { deep: true })
 
 onMounted(() => {
   loadDashboard();
 });
 
 // INTERSEPTOR KLIK UNTUK DIALOKASIKAN KE MULTI-FILTER DRILLDOWN DRAWER
-function handleDynamicChartClick(payload) {
+function handleDynamicChartClick(payload, action = false) {
   console.log("handleDynamicChartClick")
   const { key, value } = payload; // Contoh: key = 'periode', value = '2025-02'
 
-  selectedCategoryLabel.value = value;
-  
-  // Susun filter dinamis secara instan berdasarkan kolom sumbu X grafik tersebut
-  const filters = { [key]: value, ...store.applyFilter };
+  let filters = { ...store.applyFilter }
+  if (!action) {
+    filters = { ...filters, [key]: value }
+    store.setSelectedValue(payload);
+  } else {
+    filters = { ...filters, ...payload }
+  }
 
-  // Buka laci samping dan hidupkan animasi loading
+  drawerButton.value = action;
   drawerVisible.value = true;
   drawerLoading.value = true;
 
-  // Tembak ke Node.js Bridge Server
-  store.socket.emit('get_chart_detail_multi', { itemId: props.item.id, filters }, (res) => {
+  store.socket.emit('get_chart_detail_multi', { itemId: props.item.id, filters, action }, (res) => {
     drawerLoading.value = false;
     if (res.success) {
       drawerData.value = res.data;
@@ -229,8 +275,26 @@ function handleTableDynamicRowClick(event) {
   const selectedValue = rowDataSelected[categoryKey];
 
   if (selectedValue) {
-    // Teruskan ke fungsi drilldown utama kita yang sudah dinamis
     handleDynamicChartClick({ key: categoryKey, value: selectedValue });
+  }
+}
+
+function actionButton(data = {}) {
+  switch (props.item.action) {
+    case 'drawer':
+      console.log(`Open Drawer!`);
+      const filters = {}
+      props.item.filter_action.split(",").forEach((key) => {
+        filters[key] = data[key] || "";
+      });
+      handleDynamicChartClick(filters, true);
+      break;
+    case 'odoo':
+      console.log("Open Odoo!");
+      break
+    default:
+      console.log(`No Action for ${props.item.name}`);
+      break;
   }
 }
 </script>

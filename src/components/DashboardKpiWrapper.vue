@@ -16,6 +16,12 @@
   <Drawer v-model:visible="drawerVisible" position="right" class="w-full md:w-140! lg:w-180! xl:w-260! bg-slate-200 border-l border-slate-100">
       <template #header>
         <div class="flex items-center gap-3">
+          <div v-if="drawerButton" 
+            class="w-9 h-9 rounded-xl bg-slate-500/10 text-slate-500 flex items-center justify-center" 
+            @click="handleDynamicCardClick"
+          >
+            <i class="pi pi-angle-left text-sm"></i>
+          </div>
           <div class="w-9 h-9 rounded-xl bg-slate-500/10 text-slate-500 flex items-center justify-center">
             <i class="pi pi-search-plus text-sm"></i>
           </div>
@@ -67,6 +73,11 @@
               </span>
             </template>
           </Column>
+          <Column headerStyle="width: 8rem; text-align: center" bodyStyle="text-align: center; overflow: visible">
+            <template #body="slotProps">
+              <Button icon="pi pi-eye" rounded class="mr-2" size="small" severity="secondary" @click="actionButton(slotProps.data)" />
+            </template>
+          </Column>
         </DataTable>
       </div>
     </Drawer>
@@ -74,13 +85,18 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { useDashboardStore } from '../store/dashboard';
-import DataTable from 'primevue/datatable';
+
+import Button from 'primevue/button';
 import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
 import Drawer from 'primevue/drawer';
-import KpiCard from './KpiCard.vue';
-import { DataFormatter } from '../utils/formatter.js';
+
 import { FilterMatchMode } from '@primevue/core/api';
+
+import { useDashboardStore } from '../store/dashboard';
+import { DataFormatter } from '../utils/formatter.js';
+
+import KpiCard from './KpiCard.vue';
 
 const props = defineProps({
   item: { type: Object, required: true }
@@ -89,6 +105,7 @@ const props = defineProps({
 const drawerVisible = ref(false);
 const drawerLoading = ref(false);
 const drawerData = ref([]);
+const drawerButton = ref(false);
 
 const drawerColumns = computed(() => {
   if (drawerData.value.length === 0) return [];
@@ -111,17 +128,40 @@ const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
 
-function handleDynamicCardClick() {
+function handleDynamicCardClick(filters = {}, action = false) {
   console.log("handleDynamicCardClick")
+  drawerButton.value = action;
   drawerVisible.value = true;
   drawerLoading.value = true;
 
-  store.socket.emit('get_chart_detail_multi', { itemId: props.item.id, filters: store.applyFilter }, (res) => {
+  console.log(action);
+  store.socket.emit('get_chart_detail_multi', { itemId: props.item.id, filters: {...store.applyFilter, ...filters}, action }, (res) => {
     drawerLoading.value = false;
-    if (res.success) {
-      drawerData.value = res.data;
-    }
+    drawerData.value = res.success ? res.data : [];
   });
+}
+
+function actionButton(data) {
+  switch (props.item.action) {
+    case 'drawer':
+      console.log(`Open Drawer!`);
+      if (props.item.filter_action == null) {
+        console.log("Filter key not found!");
+        break;
+      }
+      const filters = {}
+      props.item.filter_action.split(",").forEach((key) => {
+        filters[key] = data[key] || "";
+      });
+      handleDynamicCardClick(filters, true);
+      break;
+    case 'odoo':
+      console.log("Open Odoo!");
+      break
+    default:
+      console.log(`No Action for ${props.item.name}`);
+      break;
+  }
 }
 
 function loadDashboard() {
