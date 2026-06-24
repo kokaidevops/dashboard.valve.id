@@ -29,6 +29,7 @@ const props = defineProps({
   data: { type: Array, default: () => [] },
   direction: { type: String, default: 'vertical' },
   chartId: { type: String, default: 'chart-xy' },
+  hasGoal: { type: Boolean, default: false },
 });
 
 const filterChange = ref(false);
@@ -88,6 +89,62 @@ const transformedData = computed(() => {
 });
 
 // 2. GENERATE OPTIONS (KONFIGURASI GRAFIK) ADAPTIF SINKRON TEMA
+function getAxisMax() {
+  if (!props.hasGoal) return undefined;
+
+  let target = 1
+  if(store.applyFilter.range == '1 week') target = 3
+  if(store.applyFilter.range == '1 month') target = 12
+  if(store.applyFilter.range == '1 year') target = 48
+
+  const values = transformedData.value.series.flatMap(s => s.data);
+  const dataMax = Math.max(...values, 0);
+
+  return Math.max(dataMax, target) + 1;
+}
+
+const chartAnnotations = computed(() => {
+  if (!props.hasGoal) return {};
+
+  let target = 1
+  if(store.applyFilter.range == '1 week') target = 3
+  if(store.applyFilter.range == '1 month') target = 12
+  if(store.applyFilter.range == '1 year') target = 48
+
+  const markerLineConfig = {
+    strokeWidth: 3,
+    dashArray: 4,
+    borderColor: '#ef4444',
+    label: {
+      borderColor: '#ef4444',
+      style: {
+        color: '#fff',
+        background: '#ef4444',
+        fontFamily: 'Plus Jakarta Sans, sans-serif',
+        fontSize: '10px',
+        fontWeight: 700
+      },
+      text: `Target: ${DataFormatter.autoFormat(':number', target, true)}`
+    }
+  };
+
+  if (props.direction == 'horizontal') {
+    return {
+      xaxis: [{
+        x: target,
+        ...markerLineConfig
+      }]
+    };
+  } else {
+    return {
+      yaxis: [{
+        y: target,
+        ...markerLineConfig
+      }]
+    };
+  }
+});
+
 const chartOptions = computed(() => {
   const categories = transformedData.value.categories;
   const xlabel = columns.value[0];
@@ -173,11 +230,15 @@ function getFormatterConfiguration() {
   const ylabel = columns.value[columns.value.length - 1];
 
   if (filterChange.value) {
-    return {};
+    return {
+      annotations: chartAnnotations.value
+    };
   };
+  console.log(getAxisMax())
 
   return {
     xaxis: {
+      max: props.direction === 'horizontal' ? getAxisMax() : undefined,
       categories: categories,
       labels: {
         formatter: (val) => { return DataFormatter.autoFormat(props.direction === 'horizontal' ? ylabel : xlabel , val, false) },
@@ -197,11 +258,13 @@ function getFormatterConfiguration() {
       }
     },
     yaxis: {
+      max: props.direction !== 'horizontal' ? getAxisMax() : undefined,
       labels: {
         formatter: (val) => { return DataFormatter.autoFormat(props.direction === 'horizontal' ? xlabel : ylabel , val, false) },
         style: { colors: '#94a3b8', fontSize: '11px' }
       }
     },
+    annotations: chartAnnotations.value
   }
 }
 
