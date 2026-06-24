@@ -8,6 +8,7 @@
     :label="label"
     :has-goal="item.has_goal"
     :achievement="achievement"
+    :target="target"
     @card-click="handleDynamicCardClick"
     class="col-span-2"
   />
@@ -30,13 +31,38 @@
           <span class="text-xs text-slate-400">Menarik data dari database...</span>
         </div>
         
-        <DataTable v-else :value="drawerData" :rows="10" paginator responsiveLayout="scroll">
+        <DataTable v-else 
+          :value="drawerData" 
+          v-model:filters="filters"
+          :globalFilterFields="drawerColumns" 
+          :rows="10" 
+          removableSort 
+          stripedRows 
+          showGridlines 
+          paginator 
+          responsiveLayout="scroll"
+        >
+          <template #header>
+            <div class="flex justify-end items-center mb-2">
+              <div class="relative w-full max-w-xs">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                  <i class="pi pi-search text-xs"></i>
+                </span>
+                <input 
+                  v-model="filters['global'].value" 
+                  type="text" 
+                  placeholder="Cari rincian data..." 
+                  class="w-full pl-9 pr-4 py-1.5 bg-slate-50 text-xs rounded-xl border border-slate-100 focus:outline-hidden focus:border-brand-500 text-slate-700 font-medium transition-colors"
+                />
+              </div>
+            </div>
+          </template>
           <template #empty>
             <div class="text-center py-8 text-xs text-slate-400">Detail rincian data tidak ditemukan.</div>
           </template>
           <Column v-for="col in drawerColumns" :key="col" :field="col" :header="DataFormatter.cleanHeaderLabel(col)" sortable>
             <template #body="slotProps">
-              <span :class="{'font-semibold text-teal-600': col.toLowerCase().includes('omset')}">
+              <span>
                 {{ DataFormatter.autoFormat(col, slotProps.data[col], false) }}
               </span>
             </template>
@@ -54,6 +80,7 @@ import Column from 'primevue/column';
 import Drawer from 'primevue/drawer';
 import KpiCard from './KpiCard.vue';
 import { DataFormatter } from '../utils/formatter.js';
+import { FilterMatchMode } from '@primevue/core/api';
 
 const props = defineProps({
   item: { type: Object, required: true }
@@ -72,12 +99,17 @@ const drawerColumns = computed(() => {
   });
 });
 
+
 const store = useDashboardStore();
 const loading = ref(true);
 const data = ref(0);
 const percent = ref(0);
 const achievement = ref(0);
+const target = ref(0);
 const label = ref('');
+const filters = ref({
+  global: { value: null, matchMode: FilterMatchMode.CONTAINS }
+});
 
 function handleDynamicCardClick() {
   console.log("handleDynamicCardClick")
@@ -102,6 +134,7 @@ function loadDashboard() {
       data.value = parseFloat(rowData[keys[0]]) || 0;
       percent.value = parseFloat(rowData[keys[1]]) || 0;
       achievement.value = parseFloat(rowData[keys[2]]) || 0;
+      target.value = parseFloat(rowData[keys[3]]) || 0;
     }
   });
 }

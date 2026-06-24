@@ -2,9 +2,14 @@
   <div @click="$emit('card-click')" class="bg-white border border-slate-100 rounded-2xl p-5 shadow-xs flex flex-col justify-between h-35 transition-all duration-300 relative overflow-hidden">
     
     <div class="flex items-center justify-between shrink-0">
-      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider truncate max-w-[80%]">
-        {{ title }}
-      </span>
+      <div class="grid grid-rows-2 w-full">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider truncate max-w-[80%]">
+          {{ title }}
+        </span>
+        <div v-if="hasGoal" class="text-xs mt-0.5 text-slate-500">
+          {{ DataFormatter.autoFormat(':currency', target, false) }}
+        </div>
+      </div>
       <div class="flex items-center justify-center gap-1">
         <div v-if="hasGoal" :class="[
           'w-14 h-8 text-xs rounded-xl flex items-center justify-center border transition-colors',
@@ -57,6 +62,7 @@ const props = defineProps({
   value: { type: [Number, String], default: 0 },
   percentage: { type: Number, default: 0 },
   achievement: { type: Number, default: 0 },
+  target: { type: Number, default: 0 },
   hasGoal: { type: Boolean, default: false },
   icon: { type: String, default: 'pi-chart-line' },
 });

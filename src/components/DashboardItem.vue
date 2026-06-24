@@ -37,15 +37,59 @@
       </div>
 
       <div v-else class="w-full overflow-hidden flex flex-col justify-between">
-        <DataTable :value="rawData" :rows="5" :paginator="rawData.length > 5" stripedRows tableStyle="min-width: 50rem" responsiveLayout="scroll" @row-click="handleTableDynamicRowClick">
+        <DataTable 
+          :value="rawData" 
+          v-model:filters="tableFilters"
+          filterDisplay="menu"
+          :globalFilterFields="tableColumns" 
+          :rows="5" 
+          :paginator="rawData.length > 5" 
+          showGridlines 
+          stripedRows 
+          tableStyle="min-width: 50rem" 
+          responsiveLayout="scroll" 
+          @row-click="handleTableDynamicRowClick"
+        >
+          <template #header>
+            <div class="flex justify-end items-center mb-2">
+              <div class="relative w-full max-w-xs">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                  <i class="pi pi-search text-xs"></i>
+                </span>
+                <input 
+                  v-model="tableFilters['global'].value" 
+                  type="text" 
+                  placeholder="Cari rincian data..." 
+                  class="w-full pl-9 pr-4 py-1.5 bg-slate-50 text-xs rounded-xl border border-slate-100 focus:outline-hidden focus:border-brand-500 text-slate-700 font-medium transition-colors"
+                />
+              </div>
+            </div>
+          </template>
           <template #empty>
             <div class="text-center py-12 text-xs text-slate-400 italic">Tidak ada baris data.</div>
           </template>
-          <Column v-for="col in tableColumns" :key="col" :field="col" :header="DataFormatter.cleanHeaderLabel(col)" sortable>
+          <Column 
+            v-for="col in tableColumns" 
+            :key="col" 
+            :field="col" 
+            :header="DataFormatter.cleanHeaderLabel(col)" 
+            sortable
+            filter :showFilterMatchModes="true"
+          >
             <template #body="slotProps">
               <span :class="{'font-semibold text-teal-600': col.toLowerCase().includes('omset')}">
                 {{ DataFormatter.autoFormat(col, slotProps.data[col], false) }}
               </span>
+            </template>
+
+            <template #filterelement="{ filterModel, filterCallback }">
+              <input 
+                v-model="filterModel.value" 
+                type="text" 
+                @input="filterCallback()" 
+                class="p-1 text-xs bg-slate-50 border border-slate-200 rounded-md" 
+                placeholder="Filter nilai..."
+              />
             </template>
           </Column>
         </DataTable>
@@ -71,7 +115,7 @@
           <span class="text-xs text-slate-400">Menarik data dari database...</span>
         </div>
         
-        <DataTable v-else :value="drawerData" :rows="10" paginator responsiveLayout="scroll">
+        <DataTable v-else :value="drawerData" :rows="10" showGridlines stripedRows paginator responsiveLayout="scroll">
           <template #empty>
             <div class="text-center py-8 text-xs text-slate-400">Detail rincian data tidak ditemukan.</div>
           </template>
@@ -90,6 +134,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
+import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import { useDashboardStore } from '../store/dashboard';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -103,6 +148,10 @@ const props = defineProps({
 });
 
 const store = useDashboardStore();
+
+const tableFilters = ref({
+  global: { value: null, matchMode: FilterMatchMode.CONTAINS }
+});
 
 // State Internal Komponen Kartu
 const currentView = ref('chart');
@@ -129,21 +178,22 @@ function loadDashboard() {
 }
 
 // Ambil Struktur Kolom Dinamis Berdasarkan Key Data yang Masuk
-const tableColumns = computed(() => {
-  return getHeader(rawData.value);
-});
-const drawerColumns = computed(() => {
-  return getHeader(drawerData.value);
-});
-// Sinkronisasi Data Real-time (Push Update dari Node.js / Odoo Bridge)
+const tableColumns = computed(() => { return getHeader(rawData.value); });
+const drawerColumns = computed(() => { return getHeader(drawerData.value); });
+
 watch(() => store.applyFilter, () => {
   loadDashboard();
 }, { deep: true });
-watch(() => props.item.realtimeData, (newData) => {
-  if (newData) { rawData.value = newData; }
-}, { deep: true });
+watch(() => rawData.value, () => {
+  const keys = Object.keys(rawData.value[0] || {});
+  keys.forEach(key => {
+    if (!tableFilters.value[key]) {
+      tableFilters.value[key] = { value: null, matchMode: FilterMatchMode.CONTAINS };
+    }
+  });
+  console.log(tableFilters.value);
+}, { immediate: true });
 
-// Pemuatan Data Pertama Kali (Initial Pull) Saat Kartu Terpasang
 onMounted(() => {
   loadDashboard();
 });
