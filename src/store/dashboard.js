@@ -36,6 +36,10 @@ export const useDashboardStore = defineStore('dashboard', () => {
     range: '1 month',
     format: 'YYYY-MM'
   });
+  const selectedValue = ref({
+    key: '',
+    value: ''
+  });
 
   function setFilter(newValue) {
     currentFilter.value = newValue;
@@ -83,6 +87,10 @@ export const useDashboardStore = defineStore('dashboard', () => {
     console.log(`Filter global berubah: ${newValue.code} - [start: ${start}, range: ${range}, format: ${format}], menyegarkan data engine...`);
   }
 
+  function setSelectedValue(payload) {
+    selectedValue.value = payload;
+  }
+
   // ── FUNGSI NAVIGASI & LAYOUT ──
   function fetchSidebarPages() {
     const userId = authStore.user ? authStore.user.id : null;
@@ -124,6 +132,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   return {
     socket, pagesList, currentPageName, dashboardItems, isLoading, errorMessage,
-    isSidebarOpen, filters, currentFilter, applyFilter, setFilter, fetchSidebarPages, fetchDashboardLayout
+    isSidebarOpen, filters, currentFilter, applyFilter, selectedValue,
+    setFilter, fetchSidebarPages, fetchDashboardLayout, setSelectedValue
   };
 });
