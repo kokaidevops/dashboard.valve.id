@@ -73,7 +73,7 @@
               </span>
             </template>
           </Column>
-          <Column headerStyle="width: 8rem; text-align: center" bodyStyle="text-align: center; overflow: visible">
+          <Column v-if="props.item.action !== 'no' && !drawerButton" headerStyle="width: 8rem; text-align: center" bodyStyle="text-align: center; overflow: visible">
             <template #body="slotProps">
               <Button icon="pi pi-eye" rounded class="mr-2" size="small" severity="secondary" @click="actionButton(slotProps.data)" />
             </template>
@@ -134,7 +134,6 @@ function handleDynamicCardClick(filters = {}, action = false) {
   drawerVisible.value = true;
   drawerLoading.value = true;
 
-  console.log(action);
   store.socket.emit('get_chart_detail_multi', { itemId: props.item.id, filters: {...store.applyFilter, ...filters}, action }, (res) => {
     drawerLoading.value = false;
     drawerData.value = res.success ? res.data : [];
