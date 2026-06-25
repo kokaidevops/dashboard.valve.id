@@ -7,7 +7,7 @@
           {{ title }}
         </span>
         <div v-if="hasGoal" class="text-xs mt-0.5 text-slate-500">
-          {{ DataFormatter.autoFormat(':currency', target, false) }}
+          {{ DataFormatter.autoFormat(label, target, false) }}
         </div>
       </div>
       <div class="flex items-center justify-center gap-1">
