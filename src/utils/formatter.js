@@ -104,11 +104,7 @@ export const DataFormatter = {
         return this.formatCurrency(value, forceCompact);
         case 'percentage':
           return this.formatPercentage(value, true);
-        case 'year':
-          return this.formatDateTime(value, type);
         case 'month':
-          return this.formatDateTime(value, type);
-        case 'date':
           return this.formatDateTime(value, type);
         case 'number':
           return forceCompact ? this.formatCompactNumber(value) : value.toLocaleString('id-ID');
